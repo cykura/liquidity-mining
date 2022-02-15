@@ -1,12 +1,12 @@
 import * as chai from "chai";
 import * as anchor from '@project-serum/anchor';
 import { Program, web3 } from '@project-serum/anchor';
-import { PublicKey, SolanaProvider } from '@saberhq/solana-contrib';
+import { PublicKey, SolanaProvider, TransactionEnvelope } from '@saberhq/solana-contrib';
 import { GokiSDK, SmartWalletWrapper } from '@gokiprotocol/client';
 import { chaiSolana, expectTX } from '@saberhq/chai-solana';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, createMint, TOKEN_PROGRAM_ID } from '@saberhq/token-utils';
 import { Token } from '@solana/spl-token';
-import { findGovernorAddress, findLockerAddress, GovernorWrapper, LockerWrapper, TribecaSDK } from '@tribecahq/tribeca-sdk';
+import { findEscrowAddress, findGovernorAddress, findLockerAddress, GovernorWrapper, LockerWrapper, TribecaSDK } from '@tribecahq/tribeca-sdk';
 import { LiquidityMining } from '../target/types/liquidity_mining';
 
 chai.use(chaiSolana);
@@ -39,15 +39,17 @@ describe('liquidity-mining', () => {
   let govTokenMint: PublicKey;
 
   // Tribeca governor
-  let tribecaSdk: TribecaSDK
-  let lockerKey: PublicKey
-  let governorKey: PublicKey
-  let governorWrapper: GovernorWrapper
-  let lockerWrapper: LockerWrapper
+  let tribecaSdk: TribecaSDK;
+  let lockerKey: PublicKey;
+  let governorKey: PublicKey;
+  let escrowKey: PublicKey;
+  let governorWrapper: GovernorWrapper;
+  let lockerWrapper: LockerWrapper;
 
   it('derive addresses', async () => {
     [governorKey] = await findGovernorAddress(base.publicKey);
     [lockerKey] = await findLockerAddress(base.publicKey);
+    [escrowKey] = await findEscrowAddress(lockerKey, anchorProvider.wallet.publicKey);
 
     owners = [governorKey]
   })
@@ -119,9 +121,32 @@ describe('liquidity-mining', () => {
       baseKP: base,
       governor: governorKey,
       govTokenMint,
-    })
+    });
     await expectTX(createLockerTx).to.be.fulfilled;
 
+    lockerWrapper = await LockerWrapper.load(
+      tribecaSdk,
+      lockerKey,
+      governorKey
+    );
+  })
+
+  it('setup escrow and lock tokens', async () => {
+    // automatically creates escrow if it doesn't exist, and locks tokens inside
+    const lockTokensTx = await lockerWrapper.lockTokens({
+      amount: new anchor.BN(1e6),
+      duration: new anchor.BN(2592000)
+    });
+
+    await expectTX(lockTokensTx).to.be.fulfilled;
+  })
+
+  it('extend lockup duration', async () => {
+    // TODO
+  })
+
+  it('withdraw tokens from lockup', async () => {
+    // TODO
   })
 
   it('Is initialized!', async () => {

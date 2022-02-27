@@ -14,7 +14,6 @@ import { BN } from '@project-serum/anchor';
 
 chai.use(chaiSolana);
 
-
 const expectLockedSupply = async (
   locker: LockerWrapper,
   expectedSupply: BN
@@ -171,7 +170,7 @@ describe('liquidity-mining', () => {
     await expectTX(lockTokensTx).to.be.fulfilled;
     await expectLockedSupply(lockerWrapper, lockedAmt);
 
-    const escrowWrapper = new VoteEscrow( 
+    const escrowWrapper = new VoteEscrow(
       tribecaSdk,
       lockerKey,
       governorKey,
@@ -179,7 +178,7 @@ describe('liquidity-mining', () => {
       anchorProvider.wallet.publicKey,
     );
     console.log("Voting power: ", await escrowWrapper.calculateVotingPower());
- 
+
     const escData = await lockerWrapper.fetchEscrow(escrowKey);
     console.log("Amount after lockup: ", escData.amount.toString());
     console.log("Escrow start: ", escData.escrowStartedAt.toString());
@@ -204,28 +203,6 @@ describe('liquidity-mining', () => {
     console.log("Escrow End after update: ", escrow.escrowEndsAt.toString());
     console.log("New extended time: ", escrow.escrowEndsAt.sub(escrow.escrowStartedAt).toString());
   })
-
-  // it('withdraw tokens from lockup', async () => {
-  //   // The tokens are withdrawn from the escrow
-  //   await sleep(2500);
-  //   const { locker } = lockerWrapper;
-  //   const lockData = await lockerWrapper.data();
-
-  //   const [escKey, bump] = await findEscrowAddress(locker, anchorProvider.wallet.publicKey);
-  //   const escrowATA = await getATAAddress({
-  //     mint: lockData.tokenMint,
-  //     owner: escKey,
-  //   });
-  //   const fEscrow = await lockerWrapper.fetchEscrow(escKey);
-  //   console.log("Extended time: ", fEscrow.escrowEndsAt.sub(fEscrow.escrowStartedAt).toString());
-
-  //   const exitTx = await lockerWrapper.exit({ authority: anchorProvider.wallet.publicKey });
-  //   await expectTX(exitTx, "exit lock up").to.be.fulfilled;
-
-  //   const tokenAcc = await getTokenAccount(tribecaSdk.provider, escrowATA);
-  //   expect(tokenAcc.amount).to.bignumber.eq(new anchor.BN(0));
-  //   await expectLockedSupply(lockerWrapper, new anchor.BN(0));
-  // })
 
   it('Is initialized!', async () => {
     // Add your test here.

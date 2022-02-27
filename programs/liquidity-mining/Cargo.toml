@@ -1,8 +1,8 @@
 [package]
 name = "liquidity-mining"
 version = "0.1.0"
-description = "Created with Anchor"
-edition = "2018"
+description = "Liquidity mining program for Cyclos core"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -16,7 +16,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.21.0"
-anchor-spl = "*"
-locked-voter = { version = "0.4.0", features = ["cpi"] } 
-govern = "*"
+anchor-lang = "0.22.0"
+anchor-spl = "0.22.0"
+locked-voter = { version = "0.5.1", features = ["cpi"] }
+# govern = "*"

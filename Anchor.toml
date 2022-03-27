@@ -27,3 +27,7 @@ program = "./external-programs/govern.so"
 [[test.genesis]]
 address = "LocktDzaV1W2Bm9DeZeiyz4J9zs4fRqNiYqQyracRXw"
 program = "./external-programs/locked_voter.so"
+
+[[test.genesis]]
+address = "cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8"
+program = "./external-programs/cyclos_core.so"

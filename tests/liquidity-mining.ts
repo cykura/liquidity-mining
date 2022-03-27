@@ -7,6 +7,7 @@ import { expect } from 'chai'
 import { createMintsAndAirdrop } from "./utils/createMintsAndAirdrop"
 import { setupEscrowAndLockTokens } from "./utils/setupEscrowAndLockTokens"
 import { setupWorkspace } from "./utils/setupWorkspace"
+import { createCyclosPosition } from "./utils/createCyclosPosition"
 
 chai.use(chaiSolana)
 
@@ -34,5 +35,9 @@ describe('liquidity-mining', () => {
   })
   it('setup locker and escrow', async () => {
     ({ locker, escrow } = await setupEscrowAndLockTokens(provider, token0))
+  })
+
+  it('create cyclos pool and position', async () => {
+    await createCyclosPosition(provider, token0, token1)
   })
 })

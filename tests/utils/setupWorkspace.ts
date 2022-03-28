@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Program } from "@project-serum/anchor"
 import { SolanaProvider } from "@saberhq/solana-contrib"
-import { LiquidityMining } from "../../target/types/liquidity_mining"
+import { CykuraStaker } from "../../target/types/cykura_staker"
 
 export function setupWorkspace() {
   const anchorProvider = anchor.Provider.env()
@@ -13,7 +13,7 @@ export function setupWorkspace() {
     opts: anchorProvider.opts,
   })
 
-  const program = anchor.workspace.LiquidityMining as Program<LiquidityMining>
+  const program = anchor.workspace.CykuraStaker as Program<CykuraStaker>
 
   return { program, provider }
 }

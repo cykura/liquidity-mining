@@ -1,12 +1,12 @@
 [package]
-name = "liquidity-mining"
+name = "cykura-staker"
 version = "0.1.0"
-description = "Liquidity mining program for Cyclos core"
+description = "Liquidity mining program for Cykura (prev Cyclos)"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "liquidity_mining"
+name = "cykura_staker"
 
 [features]
 no-entrypoint = []

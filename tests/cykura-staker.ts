@@ -12,12 +12,12 @@ import { createCyclosPosition } from "./utils/createCyclosPosition"
 chai.use(chaiSolana)
 
 /**
- * Integration tests for cyclos liquidity mining
+ * Integration tests for Cykura staker (liquidity mining)
  *
  * For a cyclos pool of [token0, token1, 500 fee], offer a liquidity mining incentive in token0.
  * Token0 is also the governance token which gives a liquidity mining boost.
  */
-describe('liquidity-mining', () => {
+describe('cykura-staker', () => {
   const { program, provider } = setupWorkspace()
 
   // token accounts and ATAs
@@ -39,5 +39,11 @@ describe('liquidity-mining', () => {
 
   it('create cyclos pool and position', async () => {
     await createCyclosPosition(provider, token0, token1)
+  })
+
+  it('create a new incentive', async () => {
+    await program.rpc.createIncentive({
+      accounts: {}
+    })
   })
 })

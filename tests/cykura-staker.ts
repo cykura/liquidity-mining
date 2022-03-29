@@ -51,10 +51,15 @@ describe('cykura-staker', () => {
   })
 
   it('create a new incentive', async () => {
-    await program.rpc.createIncentive(new BN(0), new BN(0), {
-      accounts: {
-        poolState: ammAccounts.poolState
-      }
-    })
+    const slot = await provider.connection.getSlot()
+    const blockTime = await provider.connection.getBlockTime(slot)
+    console.log('block time', blockTime)
+
+    // await program.methods.createIncentive()
+    // await program.rpc.createIncentive(new BN(0), new BN(0), {
+    //   accounts: {
+    //     poolState: ammAccounts.poolState
+    //   }
+    // })
   })
 })

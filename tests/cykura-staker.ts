@@ -1,7 +1,7 @@
 import * as chai from "chai"
 import * as anchor from '@project-serum/anchor'
 import { Program, web3, BN } from '@project-serum/anchor'
-import { TransactionEnvelope } from '@saberhq/solana-contrib'
+import { PublicKey, TransactionEnvelope } from '@saberhq/solana-contrib'
 import { chaiSolana, expectTX } from '@saberhq/chai-solana'
 import { expect } from 'chai'
 import { createMintsAndAirdrop } from "./utils/createMintsAndAirdrop"
@@ -30,6 +30,15 @@ describe('cykura-staker', () => {
   let locker: web3.PublicKey
   let escrow: web3.PublicKey
 
+  // Cyclos core
+  let ammAccounts: {
+    factoryState: PublicKey,
+    feeState: PublicKey,
+    poolState: PublicKey,
+    vault0: PublicKey,
+    vault1: PublicKey,
+  }
+
   it('create token mints and airdrop to wallet', async () => {
     ({ token0, token1, ata0, ata1 } = await createMintsAndAirdrop(provider))
   })
@@ -38,12 +47,14 @@ describe('cykura-staker', () => {
   })
 
   it('create cyclos pool and position', async () => {
-    await createCyclosPosition(provider, token0, token1)
+    ammAccounts = await createCyclosPosition(provider, token0, token1)
   })
 
   it('create a new incentive', async () => {
-    await program.rpc.createIncentive({
-      accounts: {}
+    await program.rpc.createIncentive(new BN(0), new BN(0), {
+      accounts: {
+        poolState: ammAccounts.poolState
+      }
     })
   })
 })

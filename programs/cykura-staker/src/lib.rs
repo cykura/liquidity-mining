@@ -44,7 +44,8 @@ pub mod cykura_staker {
             ErrorCode::IncentiveDurationIsTooLong
         );
 
-        ctx.accounts.create_incentive(*ctx.bumps.get("incentive").unwrap(), start_time, end_time)
+        ctx.accounts
+            .create_incentive(*ctx.bumps.get("incentive").unwrap(), start_time, end_time)
     }
 
     /// Adds a reward to an [Incentive]
@@ -57,11 +58,25 @@ pub mod cykura_staker {
     /// Ends an [Incentive] after the incentive end time has passed and all stakes have been withdrawn
     pub fn end_incentive(ctx: Context<EndIncentive>) -> Result<()> {
         let incentive = &ctx.accounts.incentive;
-        require!(Clock::get().unwrap().unix_timestamp > incentive.end_time, ErrorCode::CannotEndIncentiveBeforeEndTime);
-        require!(incentive.total_reward_unclaimed > 0, ErrorCode::NoRefundAvailable);
-        require!(incentive.number_of_stakes == 0, ErrorCode::CannotEndIncentiveWhileDepositsAreStaked);
+        require!(
+            Clock::get().unwrap().unix_timestamp > incentive.end_time,
+            ErrorCode::CannotEndIncentiveBeforeEndTime
+        );
+        require!(
+            incentive.total_reward_unclaimed > 0,
+            ErrorCode::NoRefundAvailable
+        );
+        require!(
+            incentive.number_of_stakes == 0,
+            ErrorCode::CannotEndIncentiveWhileDepositsAreStaked
+        );
 
         ctx.accounts.end_incentive()
+    }
+
+    /// Creates a new [Deposit] by staking a position NFT.
+    pub fn create_deposit(ctx: Context<CreateDeposit>) -> Result<()> {
+        ctx.accounts.create_deposit(*ctx.bumps.get("deposit").unwrap())
     }
 }
 
@@ -84,7 +99,8 @@ pub enum ErrorCode {
     NoRefundAvailable,
     #[msg("Cannot end incentive while deposits are staked")]
     CannotEndIncentiveWhileDepositsAreStaked,
-
+    #[msg("Not a Cykura NFT")]
+    NotACykuraNft,
     #[msg("Incentive not started")]
     IncentiveNotStarted,
     #[msg("Incentive ended")]

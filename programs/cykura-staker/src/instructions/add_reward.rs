@@ -39,14 +39,17 @@ impl<'info> AddReward<'info> {
         let incentive = &mut self.incentive;
         incentive.total_reward_unclaimed += reward;
 
-        token::transfer(CpiContext::new(
-            self.token_program.to_account_info(),
-            token::Transfer {
-                from: self.payer_token_account.to_account_info(),
-                to: self.vault.to_account_info(),
-                authority: self.payer.to_account_info(),
-            },
-        ), reward)?;
+        token::transfer(
+            CpiContext::new(
+                self.token_program.to_account_info(),
+                token::Transfer {
+                    from: self.payer_token_account.to_account_info(),
+                    to: self.vault.to_account_info(),
+                    authority: self.payer.to_account_info(),
+                },
+            ),
+            reward,
+        )?;
 
         emit!(AddRewardEvent {
             incentive: incentive.key(),

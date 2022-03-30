@@ -41,15 +41,18 @@ impl<'info> EndIncentive<'info> {
             &incentive.end_time.to_be_bytes(),
             &[incentive.bump],
         ];
-        token::transfer(CpiContext::new_with_signer(
-            self.token_program.to_account_info(),
-            token::Transfer {
-                from: self.vault.to_account_info(),
-                to: self.vault.to_account_info(),
-                authority: incentive.to_account_info(),
-            },
-            &[&seeds[..]],
-        ), refund)?;
+        token::transfer(
+            CpiContext::new_with_signer(
+                self.token_program.to_account_info(),
+                token::Transfer {
+                    from: self.vault.to_account_info(),
+                    to: self.vault.to_account_info(),
+                    authority: incentive.to_account_info(),
+                },
+                &[&seeds[..]],
+            ),
+            refund,
+        )?;
 
         incentive.total_reward_unclaimed = 0;
 

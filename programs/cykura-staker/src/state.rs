@@ -33,3 +33,23 @@ pub struct Incentive {
     /// The count of deposits that are currently staked for the incentive
     pub number_of_stakes: u32,
 }
+
+#[account]
+#[derive(Default)]
+/// Represents a deposited position NFT.
+pub struct Deposit {
+    /// The ATA bump.
+    pub bump: u8,
+
+    /// The owner of the deposited NFT.
+    pub owner: Pubkey,
+
+    /// Counter of how many incentives for which the liquidity is staked.
+    pub number_of_stakes: u8,
+
+    /// The lower tick of the range.
+    pub tick_lower: i32,
+
+    /// The upper tick of the range.
+    pub tick_upper: i32,
+}

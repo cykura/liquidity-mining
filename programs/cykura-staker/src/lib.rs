@@ -76,7 +76,13 @@ pub mod cykura_staker {
 
     /// Creates a new [Deposit] by staking a position NFT.
     pub fn create_deposit(ctx: Context<CreateDeposit>) -> Result<()> {
-        ctx.accounts.create_deposit(*ctx.bumps.get("deposit").unwrap())
+        ctx.accounts
+            .create_deposit(*ctx.bumps.get("deposit").unwrap())
+    }
+
+    /// Transfers ownership of a deposit to the given recipient.
+    pub fn transfer_deposit(ctx: Context<TransferDeposit>) -> Result<()> {
+        ctx.accounts.transfer_deposit()
     }
 }
 

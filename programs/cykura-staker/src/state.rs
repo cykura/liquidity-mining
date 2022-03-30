@@ -41,7 +41,10 @@ pub struct Deposit {
     /// The ATA bump.
     pub bump: u8,
 
-    /// The owner of the deposited NFT.
+    /// The NFT mint.
+    pub mint: Pubkey,
+
+    /// The owner of the deposit.
     pub owner: Pubkey,
 
     /// Counter of how many incentives for which the liquidity is staked.

@@ -1,5 +1,5 @@
-use crate::*;
 use crate::ErrorCode;
+use crate::*;
 use anchor_spl::token;
 use cyclos_core::states::tokenized_position::TokenizedPositionState;
 use std::mem::size_of;
@@ -56,6 +56,7 @@ impl<'info> CreateDeposit<'info> {
         let tokenized_position = &self.tokenized_position.load()?;
 
         deposit.bump = bump;
+        deposit.mint = tokenized_position.mint;
         deposit.owner = self.depositor.key();
         deposit.tick_lower = tokenized_position.tick_lower;
         deposit.tick_upper = tokenized_position.tick_upper;
@@ -73,24 +74,12 @@ impl<'info> CreateDeposit<'info> {
         )?;
 
         emit!(TransferDepositEvent {
-            mint: tokenized_position.mint,
+            deposit: deposit.key(),
+            mint: deposit.mint,
             old_owner: Pubkey::default(),
             new_owner: deposit.owner,
         });
 
         Ok(())
     }
-}
-
-#[event]
-/// Emitted when ownership of a deposit changes
-pub struct TransferDepositEvent {
-    /// The mint address of the deposited NFT
-    mint: Pubkey,
-
-    /// The owner before the deposit was transferred
-    old_owner: Pubkey,
-
-    /// The owner after the deposit was transferred
-    new_owner: Pubkey,
 }

@@ -6,6 +6,9 @@ use crate::*;
 #[derive(Default)]
 /// Represents a staking incentive.
 pub struct Incentive {
+    /// The ATA bump.
+    pub bump: u8,
+
     /// The token being distributed as a reward.
     pub reward_token: Pubkey,
 
@@ -21,6 +24,12 @@ pub struct Incentive {
     /// The time when rewards stop accruing.
     pub end_time: i64,
 
-    /// The amount of reward tokens to be distributed.
-    pub reward: u64,
+    /// The amount of reward token not yet claimed by users
+    pub total_reward_unclaimed: u64,
+
+    /// Total liquidity-seconds claimed, represented as a UQ32.32
+    pub total_seconds_claimed_x32: u64,
+
+    /// The count of deposits that are currently staked for the incentive
+    pub number_of_stakes: u32,
 }

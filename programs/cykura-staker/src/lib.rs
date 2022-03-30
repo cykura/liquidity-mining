@@ -44,7 +44,7 @@ pub mod cykura_staker {
             ErrorCode::IncentiveDurationIsTooLong
         );
 
-        ctx.accounts.create_incentive(start_time, end_time)
+        ctx.accounts.create_incentive(*ctx.bumps.get("incentive").unwrap(), start_time, end_time)
     }
 
     /// Adds a reward to an [Incentive]
@@ -52,6 +52,16 @@ pub mod cykura_staker {
         require!(reward > 0, ErrorCode::RewardMustBePositive);
 
         ctx.accounts.add_reward(reward)
+    }
+
+    /// Ends an [Incentive] after the incentive end time has passed and all stakes have been withdrawn
+    pub fn end_incentive(ctx: Context<EndIncentive>) -> Result<()> {
+        let incentive = &ctx.accounts.incentive;
+        require!(Clock::get().unwrap().unix_timestamp > incentive.end_time, ErrorCode::CannotEndIncentiveBeforeEndTime);
+        require!(incentive.total_reward_unclaimed > 0, ErrorCode::NoRefundAvailable);
+        require!(incentive.number_of_stakes == 0, ErrorCode::CannotEndIncentiveWhileDepositsAreStaked);
+
+        ctx.accounts.end_incentive()
     }
 }
 
@@ -70,6 +80,11 @@ pub enum ErrorCode {
     IncentiveDurationIsTooLong,
     #[msg("Cannot end incentive before end time")]
     CannotEndIncentiveBeforeEndTime,
+    #[msg("No refund available")]
+    NoRefundAvailable,
+    #[msg("Cannot end incentive while deposits are staked")]
+    CannotEndIncentiveWhileDepositsAreStaked,
+
     #[msg("Incentive not started")]
     IncentiveNotStarted,
     #[msg("Incentive ended")]

@@ -49,9 +49,10 @@ impl<'info> CreateIncentive<'info> {
     /// * `end_time` - The time when rewards stop accruing.
     /// * `reward` - The amount of reward tokens to be distributed.
     ///
-    pub fn create_incentive(&mut self, start_time: i64, end_time: i64) -> Result<()> {
+    pub fn create_incentive(&mut self, bump: u8, start_time: i64, end_time: i64) -> Result<()> {
         let incentive = &mut self.incentive;
 
+        incentive.bump = bump;
         incentive.reward_token = self.reward_token.key();
         incentive.pool = self.pool.key();
         incentive.refundee = self.refundee.key();

@@ -1,6 +1,5 @@
-use anchor_spl::token;
-
 use crate::*;
+use anchor_spl::token;
 
 /// Accounts for [cykura_staker::add_reward].
 #[derive(Accounts)]
@@ -38,17 +37,16 @@ impl<'info> AddReward<'info> {
     ///
     pub fn add_reward(&mut self, reward: u64) -> Result<()> {
         let incentive = &mut self.incentive;
-        incentive.reward += reward;
+        incentive.total_reward_unclaimed += reward;
 
-        let cpi_ctx = CpiContext::new(
+        token::transfer(CpiContext::new(
             self.token_program.to_account_info(),
             token::Transfer {
                 from: self.payer_token_account.to_account_info(),
                 to: self.vault.to_account_info(),
                 authority: self.payer.to_account_info(),
             },
-        );
-        token::transfer(cpi_ctx, reward)?;
+        ), reward)?;
 
         emit!(AddRewardEvent {
             incentive: incentive.key(),

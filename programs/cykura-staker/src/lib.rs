@@ -84,6 +84,13 @@ pub mod cykura_staker {
     pub fn transfer_deposit(ctx: Context<TransferDeposit>) -> Result<()> {
         ctx.accounts.transfer_deposit()
     }
+
+    /// Withdraws a Cykura position token from this program to the recipient `to`
+    pub fn withdraw_token(ctx: Context<WithdrawToken>) -> Result<()> {
+        // TODO verify if bumps.get() works for UncheckedAccount.
+        // If not, use Pubkey::find_program_address() for bump
+        ctx.accounts.withdraw_token(*ctx.bumps.get("staker").unwrap())
+    }
 }
 
 /// [cykura_staker] errors.
@@ -107,6 +114,13 @@ pub enum ErrorCode {
     CannotEndIncentiveWhileDepositsAreStaked,
     #[msg("Not a Cykura NFT")]
     NotACykuraNft,
+    #[msg("cykura_staker::withdraw_token: cannot withdraw to staker")]
+    CannotWithdrawToStaker,
+    #[msg("cykura_staker::withdraw_token: cannot withdraw token while staked")]
+    CannotWithdrawTokenWhileStaked,
+    #[msg("cykura_staker::withdraw_token: only owner can withdraw token")]
+    OnlyOwnerCanWithdrawToken,
+
     #[msg("Incentive not started")]
     IncentiveNotStarted,
     #[msg("Incentive ended")]

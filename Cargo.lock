@@ -439,9 +439,9 @@ dependencies = [
 
 [[package]]
 name = "cyclos-core"
-version = "0.1.3"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab77b01e1bbb8b93d5b226cb3ed850dae82b73c35921568f8db21940ebbc5c0c"
+checksum = "55b147a4d2799ed80765f64fbc733cd344dc4148ebc38fc9bc6d8755f09ada7a"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

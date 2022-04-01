@@ -24,6 +24,7 @@ pub struct WithdrawToken<'info> {
     pub deposit_vault: Account<'info, TokenAccount>,
 
     /// The root program account which acts as the deposit vault authority.
+    /// CHECK: The address is verified using seeds and bump.
     #[account(seeds = [], bump)]
     pub staker: UncheckedAccount<'info>,
 

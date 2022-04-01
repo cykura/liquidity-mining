@@ -2,9 +2,9 @@
 
 use crate::*;
 
+/// Represents a staking incentive.
 #[account]
 #[derive(Default)]
-/// Represents a staking incentive.
 pub struct Incentive {
     /// The ATA bump.
     pub bump: u8,
@@ -34,9 +34,9 @@ pub struct Incentive {
     pub number_of_stakes: u32,
 }
 
+/// Represents a deposited LP.
 #[account]
 #[derive(Default)]
-/// Represents a deposited position NFT.
 pub struct Deposit {
     /// The ATA bump.
     pub bump: u8,
@@ -55,4 +55,12 @@ pub struct Deposit {
 
     /// The upper tick of the range.
     pub tick_upper: i32,
+}
+
+/// Represents a staked liquidity NFT.
+#[account]
+#[derive(Default)]
+pub struct Stake {
+    pub seconds_per_liquidity_initial_x32: u64,
+    pub liquidity: u64,
 }

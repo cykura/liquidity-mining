@@ -89,7 +89,28 @@ pub mod cykura_staker {
     pub fn withdraw_token(ctx: Context<WithdrawToken>) -> Result<()> {
         // TODO verify if bumps.get() works for UncheckedAccount.
         // If not, use Pubkey::find_program_address() for bump
-        ctx.accounts.withdraw_token(*ctx.bumps.get("staker").unwrap())
+        ctx.accounts
+            .withdraw_token(*ctx.bumps.get("staker").unwrap())
+    }
+
+    /// Stakes a Cykura LP token
+    pub fn stake_token(ctx: Context<StakeToken>) -> Result<()> {
+        let incentive = &ctx.accounts.incentive;
+        let block_timestamp = Clock::get().unwrap().unix_timestamp;
+        require!(
+            block_timestamp >= incentive.start_time,
+            ErrorCode::IncentiveNotStarted
+        );
+        require!(
+            block_timestamp < incentive.end_time,
+            ErrorCode::IncentiveEnded
+        );
+        require!(
+            incentive.total_reward_unclaimed > 0,
+            ErrorCode::NonExistentIncentive
+        );
+
+        ctx.accounts.stake_token()
     }
 }
 
@@ -120,15 +141,21 @@ pub enum ErrorCode {
     CannotWithdrawTokenWhileStaked,
     #[msg("cykura_staker::withdraw_token: only owner can withdraw token")]
     OnlyOwnerCanWithdrawToken,
-
-    #[msg("Incentive not started")]
+    #[msg("cykura_staker::stake_token: only owner can stake token")]
+    OnlyOwnerCanStakeToken,
+    #[msg("cykura_staker::stake_token: incentive not started")]
     IncentiveNotStarted,
-    #[msg("Incentive ended")]
+    #[msg("cykura_staker::stake_token: incentive ended")]
     IncentiveEnded,
-    #[msg("Cannot stake token with 0 liquidity")]
+    #[msg("cykura_staker::stake_token: non-existent incentive")]
+    NonExistentIncentive,
+    #[msg("cykura_staker::stake_token: token pool is not the incentive pool")]
+    TokenPoolIsNotTheIncentivePool,
+    #[msg("cykura_staker::stake_token: cannot stake token with 0 liquidity")]
     CannotStakeTokenWithZeroLiquidity,
-    #[msg("Invalid observation")]
-    InvalidObservation,
+    #[msg("cykura_staker::stake_token: not latest observation")]
+    NotLatestObservation,
+
     #[msg("Only owner can unstake before incentive end time")]
     NotStaker,
 }

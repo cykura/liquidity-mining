@@ -16,12 +16,15 @@ pub struct UnstakeToken<'info> {
     #[account(mut, has_one = incentive)]
     pub stake: Account<'info, Stake>,
 
+    /// The incentive for which to unstake the position NFT.
     #[account(mut)]
     pub incentive: Account<'info, Incentive>,
 
+    /// The deposit account of the position NFT.
     #[account(mut, constraint = deposit.mint == stake.mint)]
     pub deposit: Account<'info, Deposit>,
 
+    ///  The account to track unclaimed rewards for the deposit owner.
     #[account(
         mut,
         constraint = reward.reward_token == incentive.reward_token,

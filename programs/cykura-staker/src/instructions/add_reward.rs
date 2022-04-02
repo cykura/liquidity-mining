@@ -12,7 +12,7 @@ pub struct AddReward<'info> {
     #[account(
         mut,
         associated_token::mint = incentive.reward_token,
-        associated_token::authority = incentive.key(),
+        associated_token::authority = Pubkey::find_program_address(&[], &cyclos_core::ID).0,
     )]
     pub vault: Account<'info, TokenAccount>,
 

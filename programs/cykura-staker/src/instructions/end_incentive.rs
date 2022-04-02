@@ -12,9 +12,14 @@ pub struct EndIncentive<'info> {
     #[account(
         mut,
         associated_token::mint = incentive.reward_token,
-        associated_token::authority = incentive.key(),
+        associated_token::authority = staker.key(),
     )]
     pub vault: Account<'info, TokenAccount>,
+
+    /// The root program account which acts as the deposit vault authority.
+    /// CHECK: The address is verified using seeds and bump.
+    #[account(seeds = [], bump)]
+    pub staker: UncheckedAccount<'info>,
 
     /// The token account of the refundee.
     #[account(mut, owner = incentive.refundee)]
@@ -26,28 +31,20 @@ pub struct EndIncentive<'info> {
 
 impl<'info> EndIncentive<'info> {
     /// Ends an [Incentive] after the incentive end time has passed and all stakes have been withdrawn
-    pub fn end_incentive(&mut self) -> Result<()> {
+    pub fn end_incentive(&mut self, bump: u8) -> Result<()> {
         let incentive = &mut self.incentive;
 
         let refund = incentive.total_reward_unclaimed;
 
         // issue the refund
-        let seeds = [
-            b"Incentive".as_ref(),
-            &incentive.reward_token.to_bytes() as &[u8],
-            &incentive.pool.to_bytes() as &[u8],
-            &incentive.refundee.to_bytes() as &[u8],
-            &incentive.start_time.to_be_bytes(),
-            &incentive.end_time.to_be_bytes(),
-            &[incentive.bump],
-        ];
+        let seeds: [&[u8]; 1] = [&[bump]];
         token::transfer(
             CpiContext::new_with_signer(
                 self.token_program.to_account_info(),
                 token::Transfer {
                     from: self.vault.to_account_info(),
                     to: self.vault.to_account_info(),
-                    authority: incentive.to_account_info(),
+                    authority: self.staker.to_account_info(),
                 },
                 &[&seeds[..]],
             ),

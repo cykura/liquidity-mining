@@ -72,7 +72,8 @@ pub mod cykura_staker {
             ErrorCode::CannotEndIncentiveWhileDepositsAreStaked
         );
 
-        ctx.accounts.end_incentive()
+        ctx.accounts
+            .end_incentive(*ctx.bumps.get("staker").unwrap())
     }
 
     /// Creates a new [Deposit] by staking a position NFT.
@@ -134,6 +135,12 @@ pub mod cykura_staker {
         }
 
         ctx.accounts.unstake_token(block_timestamp)
+    }
+
+    /// Transfers `amount_requested` of accrued `reward_token` rewards from the contract to the recipient `to`
+    pub fn claim_reward(ctx: Context<ClaimReward>, amount_requested: u64) -> Result<()> {
+        ctx.accounts
+            .claim_reward(amount_requested, *ctx.bumps.get("staker").unwrap())
     }
 }
 

@@ -1,48 +1,33 @@
+use anchor_lang::AccountsClose;
 use cyclos_core::states::oracle::ObservationState;
 use cyclos_core::states::pool::{SnapshotCumulative, POOL_SEED};
 use cyclos_core::states::tick::TickState;
 use cyclos_core::states::tick::TICK_SEED;
-use cyclos_core::states::tokenized_position::TokenizedPositionState;
 
+use crate::reward_math::RewardOwed;
 use crate::ErrorCode;
 use crate::*;
-use std::mem::size_of;
 use std::ops::Deref;
 
-/// Accounts for [cykura_staker::stake_token].
+/// Accounts for [cykura_staker::unstake_token].
 #[derive(Accounts)]
-pub struct StakeToken<'info> {
+pub struct UnstakeToken<'info> {
     /// [Stake]
-    #[account(
-        init,
-        seeds = [
-            b"Stake".as_ref(),
-            deposit.mint.as_ref(),
-            incentive.key().as_ref(),
-        ],
-        bump,
-        payer = owner,
-        space = 8 + size_of::<Stake>()
-    )]
+    #[account(mut, has_one = incentive)]
     pub stake: Account<'info, Stake>,
 
-    /// The [Incentive] for which to stake the NFT.
+    #[account(mut)]
     pub incentive: Account<'info, Incentive>,
 
-    /// [Deposit] to be staked.
-    #[account(
-        mut,
-        has_one = owner @ErrorCode::OnlyOwnerCanStakeToken
-    )]
+    #[account(mut, constraint = deposit.mint == stake.mint)]
     pub deposit: Account<'info, Deposit>,
 
-    /// The account having metadata of the Cykura Position NFT.
     #[account(
-        constraint = tokenized_position.load()?.mint == deposit.mint,
-        constraint = tokenized_position.load()?.pool_id == incentive.pool @ErrorCode::TokenPoolIsNotTheIncentivePool,
-        constraint = tokenized_position.load()?.liquidity > 0 @ErrorCode::CannotStakeTokenWithZeroLiquidity,
+        mut,
+        constraint = reward.reward_token == incentive.reward_token,
+        constraint = reward.owner == deposit.owner
     )]
-    pub tokenized_position: AccountLoader<'info, TokenizedPositionState>,
+    pub reward: Account<'info, Reward>,
 
     /// The liquidity pool to which the LP position belongs.
     #[account(address = incentive.pool)]
@@ -55,7 +40,7 @@ pub struct StakeToken<'info> {
             pool.load()?.token_0.as_ref(),
             pool.load()?.token_1.as_ref(),
             &pool.load()?.fee.to_be_bytes(),
-            &tick_lower.load()?.tick.to_be_bytes()
+            &deposit.tick_lower.to_be_bytes()
         ],
         bump = tick_lower.load()?.bump,
     )]
@@ -68,10 +53,9 @@ pub struct StakeToken<'info> {
             pool.load()?.token_0.as_ref(),
             pool.load()?.token_1.as_ref(),
             &pool.load()?.fee.to_be_bytes(),
-            &tick_upper.load()?.tick.to_be_bytes()
+            &deposit.tick_upper.to_be_bytes()
         ],
         bump = tick_upper.load()?.bump,
-        constraint = tick_upper.load()?.tick > tick_lower.load()?.tick
     )]
     pub tick_upper: AccountLoader<'info, TickState>,
 
@@ -88,19 +72,19 @@ pub struct StakeToken<'info> {
     )]
     pub latest_observation: AccountLoader<'info, ObservationState>,
 
-    /// The owner of the deposit.
-    #[account(mut)]
-    pub owner: Signer<'info>,
-
-    /// System program.
-    pub system_program: Program<'info, System>,
+    /// The instruction signer. The must be the owner of the deposit, if end time has not passed.
+    pub signer: Signer<'info>,
 }
 
-impl<'info> StakeToken<'info> {
-    /// Stakes a Cykura LP token
-    pub fn stake_token(&mut self, bump: u8) -> Result<()> {
-        self.deposit.number_of_stakes = self.deposit.number_of_stakes.checked_add(1).unwrap();
-        self.incentive.number_of_stakes = self.incentive.number_of_stakes.checked_add(1).unwrap();
+impl<'info> UnstakeToken<'info> {
+    /// Unstakes a Cykura LP token
+    pub fn unstake_token(&mut self, block_timestamp: i64) -> Result<()> {
+        let deposit = &mut self.deposit;
+        let incentive = &mut self.incentive;
+        let stake = &mut self.stake;
+
+        deposit.number_of_stakes -= 1;
+        incentive.number_of_stakes -= 1;
 
         let SnapshotCumulative {
             seconds_per_liquidity_inside_x32,
@@ -111,15 +95,30 @@ impl<'info> StakeToken<'info> {
             self.latest_observation.load()?.deref(),
         );
 
-        let stake = &mut self.stake;
-        stake.bump = bump;
-        stake.seconds_per_liquidity_inside_initial_x32 = seconds_per_liquidity_inside_x32;
-        stake.liquidity = self.pool.load()?.liquidity;
+        let RewardOwed {
+            reward,
+            seconds_inside_x32,
+        } = reward_math::compute_reward_amount(
+            incentive.total_reward_unclaimed,
+            incentive.total_seconds_claimed_x32,
+            incentive.start_time,
+            incentive.end_time,
+            stake.liquidity,
+            stake.seconds_per_liquidity_inside_initial_x32,
+            seconds_per_liquidity_inside_x32,
+            block_timestamp,
+        );
 
-        emit!(StakeTokenEvent {
-            mint: self.deposit.mint,
-            incentive: self.incentive.key(),
-            liquidity: stake.liquidity,
+        incentive.total_seconds_claimed_x32 += seconds_inside_x32;
+        // reward is never greater than total reward unclaimed
+        incentive.total_reward_unclaimed -= reward;
+        self.reward.rewards_owed += reward;
+
+        stake.close(self.signer.to_account_info())?;
+
+        emit!(UnstakeTokenEvent {
+            mint: deposit.mint,
+            incentive: incentive.key()
         });
 
         Ok(())
@@ -127,8 +126,8 @@ impl<'info> StakeToken<'info> {
 }
 
 #[event]
-/// Event emitted when a Cykura LP token has been staked
-pub struct StakeTokenEvent {
+/// Event emitted when a Cykura LP token has been unstaked
+pub struct UnstakeTokenEvent {
     /// The unique identifier of a Cykura LP token.
     #[index]
     pub mint: Pubkey,
@@ -136,7 +135,4 @@ pub struct StakeTokenEvent {
     /// The incentive in which the token is staking.
     #[index]
     pub incentive: Pubkey,
-
-    /// The amount of liquidity staked.
-    pub liquidity: u64,
 }

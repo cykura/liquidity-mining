@@ -61,6 +61,34 @@ pub struct Deposit {
 #[account]
 #[derive(Default)]
 pub struct Stake {
-    pub seconds_per_liquidity_initial_x32: u64,
+    /// The ATA bump.
+    pub bump: u8,
+
+    /// The LP NFT mint.
+    pub mint: Pubkey,
+
+    /// The incentive of the [Stake].
+    pub incentive: Pubkey,
+
+    /// Seconds per liquidity at the time of staking.
+    pub seconds_per_liquidity_inside_initial_x32: u64,
+
+    /// Liquidity in the LP NFT.
     pub liquidity: u64,
+}
+
+/// The amounts of reward tokens owed to a given address according to the last time all stakes were updated
+#[account]
+pub struct Reward {
+    /// The ATA bump.
+    pub bump: u8,
+
+    /// The token being distributed as a reward.
+    pub reward_token: Pubkey,
+
+    /// The owner for which the rewards owed are checked.
+    pub owner: Pubkey,
+
+    /// The amount of the reward token claimable by the owner
+    pub rewards_owed: u64,
 }

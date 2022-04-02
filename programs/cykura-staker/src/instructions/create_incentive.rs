@@ -10,9 +10,9 @@ pub struct CreateIncentive<'info> {
         init,
         seeds = [
             b"Incentive".as_ref(),
-            reward_token.key().to_bytes().as_ref(),
-            pool.key().to_bytes().as_ref(),
-            refundee.key().to_bytes().as_ref(),
+            reward_token.key().as_ref(),
+            pool.key().as_ref(),
+            refundee.key().as_ref(),
             &start_time.to_be_bytes(),
             &end_time.to_be_bytes()
         ],

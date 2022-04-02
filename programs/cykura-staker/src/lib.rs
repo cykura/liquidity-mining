@@ -3,6 +3,7 @@ use anchor_spl::token::*;
 use cyclos_core::states::pool::PoolState;
 
 mod instructions;
+mod reward_math;
 mod state;
 
 pub use instructions::*;
@@ -110,7 +111,29 @@ pub mod cykura_staker {
             ErrorCode::NonExistentIncentive
         );
 
-        ctx.accounts.stake_token()
+        ctx.accounts.stake_token(*ctx.bumps.get("stake").unwrap())
+    }
+
+    /// Creates an empty [Reward] account for a given token and address.
+    pub fn create_reward_account(ctx: Context<CreateRewardAccount>) -> Result<()> {
+        ctx.accounts
+            .create_reward_account(*ctx.bumps.get("reward").unwrap())
+    }
+
+    /// Unstakes a Cykura LP token
+    pub fn unstake_token(ctx: Context<UnstakeToken>) -> Result<()> {
+        let incentive = &ctx.accounts.incentive;
+        let block_timestamp = Clock::get().unwrap().unix_timestamp;
+
+        // anyone can call [cykura_staker::unstake_token] if the block time is after the end time of the incentive
+        if block_timestamp < incentive.end_time {
+            require!(
+                ctx.accounts.deposit.owner == ctx.accounts.signer.key(),
+                ErrorCode::OnlyOwnerCanWithdrawTokenBeforeEndTime
+            );
+        }
+
+        ctx.accounts.unstake_token(block_timestamp)
     }
 }
 
@@ -155,6 +178,8 @@ pub enum ErrorCode {
     CannotStakeTokenWithZeroLiquidity,
     #[msg("cykura_staker::stake_token: not latest observation")]
     NotLatestObservation,
+    #[msg("cykura_staker::unstake_token: only owner can withdraw token before end time")]
+    OnlyOwnerCanWithdrawTokenBeforeEndTime,
 
     #[msg("Only owner can unstake before incentive end time")]
     NotStaker,

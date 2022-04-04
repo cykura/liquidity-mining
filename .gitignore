@@ -4,3 +4,8 @@
 target
 **/*.rs.bk
 node_modules
+
+# Generated IDL types
+artifacts/
+dist/
+src/idls/

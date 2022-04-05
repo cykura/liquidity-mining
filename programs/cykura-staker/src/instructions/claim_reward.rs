@@ -1,5 +1,5 @@
 use anchor_spl::token;
-
+use anchor_spl::associated_token::get_associated_token_address;
 use crate::*;
 
 /// Accounts for [cykura_staker::claim_reward].
@@ -18,8 +18,8 @@ pub struct ClaimReward<'info> {
     ///  The reward vault.
     #[account(
         mut,
-        associated_token::mint = reward.reward_token,
-        associated_token::authority = staker.key(),
+        // associated_token is bugged in anchor v0.22
+        address = get_associated_token_address(staker.key, &reward.reward_token)
     )]
     pub vault: Account<'info, TokenAccount>,
 

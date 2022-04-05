@@ -1,5 +1,6 @@
 use anchor_lang::AccountsClose;
 use anchor_spl::token;
+use anchor_spl::associated_token::get_associated_token_address;
 
 use crate::ErrorCode;
 use crate::*;
@@ -18,8 +19,7 @@ pub struct WithdrawToken<'info> {
     /// The vault which holds the deposited token.
     #[account(
         mut,
-        associated_token::mint = deposit.mint,
-        associated_token::authority = staker.key(),
+        address = get_associated_token_address(staker.key, &deposit.mint)
     )]
     pub deposit_vault: Account<'info, TokenAccount>,
 

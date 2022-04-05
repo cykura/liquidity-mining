@@ -3,6 +3,7 @@ use crate::*;
 use anchor_spl::token;
 use cyclos_core::states::tokenized_position::TokenizedPositionState;
 use std::mem::size_of;
+use anchor_spl::associated_token::get_associated_token_address;
 
 /// Accounts for [cykura_staker::create_deposit].
 #[derive(Accounts)]
@@ -27,8 +28,10 @@ pub struct CreateDeposit<'info> {
     /// The token vault receiving the NFT.
     #[account(
         mut,
-        associated_token::mint = depositor_token_account.mint,
-        associated_token::authority = Pubkey::find_program_address(&[], &cyclos_core::ID).0,
+        address = get_associated_token_address(
+            &Pubkey::find_program_address(&[], &cyclos_core::ID).0,
+            &depositor_token_account.mint
+        )
     )]
     pub deposit_vault: Account<'info, TokenAccount>,
 

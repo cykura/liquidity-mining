@@ -1,5 +1,6 @@
 use crate::*;
 use anchor_spl::token;
+use anchor_spl::associated_token::get_associated_token_address;
 
 /// Accounts for [cykura_staker::add_reward].
 #[derive(Accounts)]
@@ -11,8 +12,10 @@ pub struct AddReward<'info> {
     /// The vault to hold reward tokens.
     #[account(
         mut,
-        associated_token::mint = incentive.reward_token,
-        associated_token::authority = Pubkey::find_program_address(&[], &cyclos_core::ID).0,
+        address = get_associated_token_address(
+            &Pubkey::find_program_address(&[], &cyclos_core::ID).0,
+            &incentive.reward_token
+        )
     )]
     pub vault: Account<'info, TokenAccount>,
 

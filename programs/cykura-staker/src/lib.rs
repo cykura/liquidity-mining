@@ -49,6 +49,34 @@ pub mod cykura_staker {
             .create_incentive(*ctx.bumps.get("incentive").unwrap(), start_time, end_time)
     }
 
+    /// Creates a new [Incentive], boosted by voting power in the provided [Locker].
+    pub fn create_boosted_incentive(
+        ctx: Context<CreateBoostedIncentive>,
+        start_time: i64,
+        end_time: i64,
+    ) -> Result<()> {
+        let block_timestamp = Clock::get().unwrap().unix_timestamp;
+        require!(
+            block_timestamp < start_time,
+            ErrorCode::StartTimeMustBeNowOrInTheFuture
+        );
+        require!(
+            start_time - block_timestamp <= MAX_INCENTIVE_START_LEAD_TIME,
+            ErrorCode::StartTimeTooFarIntoFuture
+        );
+        require!(
+            start_time < end_time,
+            ErrorCode::StartTimeMustBeBeforeEndTime
+        );
+        require!(
+            end_time - start_time < MAX_INCENTIVE_DURATION,
+            ErrorCode::IncentiveDurationIsTooLong
+        );
+
+        ctx.accounts
+            .create_boosted_incentive(*ctx.bumps.get("incentive").unwrap(), start_time, end_time)
+    }
+
     /// Adds a reward to an [Incentive]
     pub fn add_reward(ctx: Context<AddReward>, reward: u64) -> Result<()> {
         require!(reward > 0, ErrorCode::RewardMustBePositive);

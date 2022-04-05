@@ -4,7 +4,6 @@ use crate::*;
 
 /// Represents a staking incentive.
 #[account]
-#[derive(Default)]
 pub struct Incentive {
     /// The ATA bump.
     pub bump: u8,
@@ -32,6 +31,9 @@ pub struct Incentive {
 
     /// The count of deposits that are currently staked for the incentive
     pub number_of_stakes: u32,
+
+    /// The Tribeca locker to calculate reward boost. Boosting is disabled if locker is not provided.
+    pub boost_locker: Option<Pubkey>,
 }
 
 /// Represents a deposited LP.

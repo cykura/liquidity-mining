@@ -1,10 +1,11 @@
 use crate::*;
+use locked_voter::Locker;
 use std::mem::size_of;
 
-/// Accounts for [cykura_staker::create_incentive].
+/// Accounts for [cykura_staker::create_boosted_incentive].
 #[derive(Accounts)]
 #[instruction(start_time: i64, end_time: i64)]
-pub struct CreateIncentive<'info> {
+pub struct CreateBoostedIncentive<'info> {
     /// [Incentive]
     #[account(
         init,
@@ -38,10 +39,13 @@ pub struct CreateIncentive<'info> {
 
     /// System program.
     pub system_program: Program<'info, System>,
+
+    /// The locker to calculate boost.
+    pub locker: Account<'info, Locker>,
 }
 
-impl<'info> CreateIncentive<'info> {
-    /// Creates a new [Incentive].
+impl<'info> CreateBoostedIncentive<'info> {
+    /// Creates a new [Incentive], boosted by voting power in the [Locker].
     ///
     /// # Arguments
     ///
@@ -49,7 +53,7 @@ impl<'info> CreateIncentive<'info> {
     /// * `end_time` - The time when rewards stop accruing.
     /// * `reward` - The amount of reward tokens to be distributed.
     ///
-    pub fn create_incentive(&mut self, bump: u8, start_time: i64, end_time: i64) -> Result<()> {
+    pub fn create_boosted_incentive(&mut self, bump: u8, start_time: i64, end_time: i64) -> Result<()> {
         let incentive = &mut self.incentive;
 
         incentive.bump = bump;
@@ -61,7 +65,7 @@ impl<'info> CreateIncentive<'info> {
         incentive.total_reward_unclaimed = 0;
         incentive.total_seconds_claimed_x32 = 0;
         incentive.number_of_stakes = 0;
-        incentive.boost_locker = None;
+        incentive.boost_locker = Some(self.locker.key());
 
         emit!(IncentiveCreatedEvent {
             reward_token: incentive.reward_token,
@@ -74,26 +78,4 @@ impl<'info> CreateIncentive<'info> {
 
         Ok(())
     }
-}
-
-#[event]
-/// Event emitted when a liquidity mining [Incentive] has been created.
-pub struct IncentiveCreatedEvent {
-    /// The token being distributed as a reward.
-    pub reward_token: Pubkey,
-
-    /// The Cykura pool.
-    pub pool: Pubkey,
-
-    /// The address which receives any remaining reward tokens when the incentive is ended.
-    pub refundee: Pubkey,
-
-    /// The time when the incentive program begins.
-    pub start_time: i64,
-
-    /// The time when rewards stop accruing.
-    pub end_time: i64,
-
-    /// The Tribeca locker to calculate boost.
-    pub boost_locker: Option<Pubkey>,
 }

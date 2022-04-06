@@ -6,21 +6,30 @@ use cyclos_core::states::oracle::ObservationState;
 use cyclos_core::states::pool::{SnapshotCumulative, POOL_SEED};
 use cyclos_core::states::tick::TickState;
 use cyclos_core::states::tick::TICK_SEED;
+use locked_voter::{Escrow, Locker};
 use std::ops::Deref;
 
-/// Accounts for [cykura_staker::unstake_token].
+/// Accounts for [cykura_staker::unstake_token_boosted].
 #[derive(Accounts)]
-pub struct UnstakeToken<'info> {
+pub struct UnstakeTokenBoosted<'info> {
     /// [Stake]
     #[account(mut, has_one = incentive)]
     pub stake: Account<'info, Stake>,
 
     /// The incentive for which to unstake the position NFT.
-    #[account(
-        mut,
-        constraint = incentive.boost_locker.is_none()
-    )]
+    #[account(mut)]
     pub incentive: Account<'info, Incentive>,
+
+    /// The boost locker.
+    #[account(address = incentive.boost_locker.unwrap())]
+    pub locker: Account<'info, Locker>,
+
+    /// The staker's vote locker escrow.
+    #[account(
+        constraint = escrow.locker == locker.key(),
+        constraint = escrow.owner == signer.key(),
+    )]
+    pub escrow: Account<'info, Escrow>,
 
     /// The deposit account of the position NFT.
     #[account(mut, constraint = deposit.mint == stake.mint)]
@@ -77,16 +86,18 @@ pub struct UnstakeToken<'info> {
     )]
     pub latest_observation: AccountLoader<'info, ObservationState>,
 
-    /// The instruction signer. The must be the owner of the deposit, if end time has not passed.
+    /// The deposit owner.
+    #[account(address = deposit.owner @ErrorCode::OnlyOwnerCanUnstakeFromBoostedIncentive)]
     pub signer: Signer<'info>,
 }
 
-impl<'info> UnstakeToken<'info> {
-    /// Unstakes a Cykura LP token
-    pub fn unstake_token(&mut self, block_timestamp: i64) -> Result<()> {
+impl<'info> UnstakeTokenBoosted<'info> {
+    /// Unstakes a Cykura LP token, with rewards boosted by voting power
+    pub fn unstake_token_boosted(&mut self, block_timestamp: i64) -> Result<()> {
         let deposit = &mut self.deposit;
         let incentive = &mut self.incentive;
         let stake = &mut self.stake;
+        let locker = &self.locker;
 
         deposit.number_of_stakes -= 1;
         incentive.number_of_stakes -= 1;
@@ -100,10 +111,22 @@ impl<'info> UnstakeToken<'info> {
             self.latest_observation.load()?.deref(),
         );
 
+        let voting_power = locker
+            .params
+            .calculate_voter_power(&self.escrow, block_timestamp)
+            .unwrap();
+
+        // The voting power when entire supply is locked for the max period.
+        // This is a hypothetical ceiling, not the total locked power at a point of time.
+        let max_voting_power = locker
+            .locked_supply
+            .checked_mul(locker.params.max_stake_vote_multiplier.into())
+            .unwrap();
+
         let RewardOwed {
             reward,
             seconds_inside_x32,
-        } = reward_math::compute_reward_amount(
+        } = reward_math::compute_reward_amount_boosted(
             incentive.total_reward_unclaimed,
             incentive.total_seconds_claimed_x32,
             incentive.start_time,
@@ -112,6 +135,9 @@ impl<'info> UnstakeToken<'info> {
             stake.seconds_per_liquidity_inside_initial_x32,
             seconds_per_liquidity_inside_x32,
             block_timestamp,
+            self.pool.load()?.liquidity,
+            voting_power,
+            max_voting_power,
         );
 
         incentive.total_seconds_claimed_x32 += seconds_inside_x32;
@@ -128,16 +154,4 @@ impl<'info> UnstakeToken<'info> {
 
         Ok(())
     }
-}
-
-#[event]
-/// Event emitted when a Cykura LP token has been unstaked
-pub struct UnstakeTokenEvent {
-    /// The unique identifier of a Cykura LP token.
-    #[index]
-    pub mint: Pubkey,
-
-    /// The incentive in which the token is staking.
-    #[index]
-    pub incentive: Pubkey,
 }

@@ -80,18 +80,23 @@ impl<'info> CreateIncentive<'info> {
 /// Event emitted when a liquidity mining [Incentive] has been created.
 pub struct IncentiveCreatedEvent {
     /// The token being distributed as a reward.
+    #[index]
     pub reward_token: Pubkey,
 
     /// The Cykura pool.
+    #[index]
     pub pool: Pubkey,
 
     /// The address which receives any remaining reward tokens when the incentive is ended.
+    #[index]
     pub refundee: Pubkey,
 
     /// The time when the incentive program begins.
+    #[index]
     pub start_time: i64,
 
     /// The time when rewards stop accruing.
+    #[index]
     pub end_time: i64,
 
     /// The Tribeca locker to calculate boost.

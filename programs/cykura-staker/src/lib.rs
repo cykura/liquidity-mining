@@ -73,8 +73,11 @@ pub mod cykura_staker {
             ErrorCode::IncentiveDurationIsTooLong
         );
 
-        ctx.accounts
-            .create_boosted_incentive(*ctx.bumps.get("incentive").unwrap(), start_time, end_time)
+        ctx.accounts.create_boosted_incentive(
+            *ctx.bumps.get("incentive").unwrap(),
+            start_time,
+            end_time,
+        )
     }
 
     /// Adds a reward to an [Incentive]
@@ -165,6 +168,22 @@ pub mod cykura_staker {
         ctx.accounts.unstake_token(block_timestamp)
     }
 
+    /// Unstakes a Cykura LP token, with rewards boosted by voting power
+    pub fn unstake_token_boosted(ctx: Context<UnstakeTokenBoosted>) -> Result<()> {
+        let incentive = &ctx.accounts.incentive;
+        let block_timestamp = Clock::get().unwrap().unix_timestamp;
+
+        // anyone can call [cykura_staker::unstake_token] if the block time is after the end time of the incentive
+        if block_timestamp < incentive.end_time {
+            require!(
+                ctx.accounts.deposit.owner == ctx.accounts.signer.key(),
+                ErrorCode::OnlyOwnerCanWithdrawTokenBeforeEndTime
+            );
+        }
+
+        ctx.accounts.unstake_token_boosted(block_timestamp)
+    }
+
     /// Transfers `amount_requested` of accrued `reward_token` rewards from the contract to the recipient `to`
     pub fn claim_reward(ctx: Context<ClaimReward>, amount_requested: u64) -> Result<()> {
         ctx.accounts
@@ -215,7 +234,10 @@ pub enum ErrorCode {
     NotLatestObservation,
     #[msg("cykura_staker::unstake_token: only owner can withdraw token before end time")]
     OnlyOwnerCanWithdrawTokenBeforeEndTime,
-
+    #[msg("cykura_staker::unstake_token_boosted: only owner can unstake token from a boosted incentive")]
+    OnlyOwnerCanUnstakeFromBoostedIncentive,
+    #[msg("cykura_staker::unstake_token: locker key does not match")]
+    LockerKeyDoesNotMatch,
     #[msg("Only owner can unstake before incentive end time")]
     NotStaker,
 }

@@ -1,9 +1,9 @@
 use crate::ErrorCode;
 use crate::*;
+use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token;
 use cyclos_core::states::tokenized_position::TokenizedPositionState;
 use std::mem::size_of;
-use anchor_spl::associated_token::get_associated_token_address;
 
 /// Accounts for [cykura_staker::create_deposit].
 #[derive(Accounts)]

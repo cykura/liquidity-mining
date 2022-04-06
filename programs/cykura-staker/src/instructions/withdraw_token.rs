@@ -1,6 +1,6 @@
 use anchor_lang::AccountsClose;
-use anchor_spl::token;
 use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::token;
 
 use crate::ErrorCode;
 use crate::*;

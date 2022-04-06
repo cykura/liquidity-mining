@@ -1,6 +1,6 @@
 use crate::*;
-use anchor_spl::token;
 use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::token;
 
 /// Accounts for [cykura_staker::add_reward].
 #[derive(Accounts)]

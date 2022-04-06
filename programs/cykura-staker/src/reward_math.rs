@@ -1,7 +1,6 @@
 ///! Math for computing rewards
 ///! Allows computing rewards given some parameters of stakes and incentives
 ///! Credits for veBoost formula- https://resources.curve.fi/reward-gauges/boosting-your-crv-rewards#formula
-
 use cyclos_core::libraries::full_math::MulDiv;
 
 /// Compute the amount of rewards owed given parameters of the incentive and stake
@@ -56,9 +55,9 @@ pub fn compute_reward_amount(
 /// # Math
 ///
 /// * A dampening factor for liquidity is applied as below, where `adjusted_liquidity <= liquidity`.
-/// `adjusted_liquidity = min (0.4 * liquidity + 0.6 * total_liquidity * voting_power / total_voting_power, liquidity)`
+/// `adjusted_liquidity = min (0.4 * liquidity + 0.6 * total_liquidity * voting_power / max_voting_power, liquidity)`
 ///
-/// * `reward_per_deposit = total_reward * time_contribution_of_deposit / total_time`
+/// * voting_power = amount * max_multiplier * seconds_till_expiry / max_duration
 ///
 /// # Arguments
 ///
@@ -71,7 +70,7 @@ pub fn compute_reward_amount(
 /// * `seconds_per_liquidity_inside_x32` - The seconds per liquidity of the liquidity tick range as of the current block timestamp
 /// * `current_time` - The current block timestamp, which must be greater than or equal to the start time
 /// * `voting_power` - The voting power in terms of locked veCYS
-/// * `total_voting_power` - The total voting power
+/// * `total_voting_power` - The total voting power, when the entire supply is locked for the max duration.
 /// * `pool_liquidity` - The total pool liquidity
 ///
 pub fn compute_reward_amount_boosted(
@@ -83,22 +82,23 @@ pub fn compute_reward_amount_boosted(
     seconds_per_liquidity_inside_initial_x32: u64,
     seconds_per_liquidity_inside_x32: u64,
     current_time: i64,
+    total_pool_liquidity: u64,
     voting_power: u64,
     total_voting_power: u64,
-    pool_liquidity: u64,
 ) -> RewardOwed {
     // this should never be called before the start time
     assert!(current_time >= start_time);
 
     let effective_liquidity = std::cmp::min(
         liquidity * 4 / 10
-            + pool_liquidity
+            + total_pool_liquidity
                 .mul_div_floor(voting_power, total_voting_power)
                 .unwrap()
                 * 6
                 / 10,
         liquidity,
     );
+
     // this operation is safe, as the difference cannot be greater than 1/stake.liquidity
     let seconds_inside_x32 = (seconds_per_liquidity_inside_x32
         - seconds_per_liquidity_inside_initial_x32)

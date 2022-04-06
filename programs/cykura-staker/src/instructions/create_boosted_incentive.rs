@@ -53,7 +53,12 @@ impl<'info> CreateBoostedIncentive<'info> {
     /// * `end_time` - The time when rewards stop accruing.
     /// * `reward` - The amount of reward tokens to be distributed.
     ///
-    pub fn create_boosted_incentive(&mut self, bump: u8, start_time: i64, end_time: i64) -> Result<()> {
+    pub fn create_boosted_incentive(
+        &mut self,
+        bump: u8,
+        start_time: i64,
+        end_time: i64,
+    ) -> Result<()> {
         let incentive = &mut self.incentive;
 
         incentive.bump = bump;

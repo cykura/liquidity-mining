@@ -1,6 +1,6 @@
 use crate::*;
-use anchor_spl::token;
 use anchor_spl::associated_token::get_associated_token_address;
+use anchor_spl::token;
 
 /// Accounts for [cykura_staker::end_incentive].
 #[derive(Accounts)]
@@ -22,7 +22,8 @@ pub struct EndIncentive<'info> {
     pub staker: UncheckedAccount<'info>,
 
     /// The token account of the refundee.
-    #[account(mut, constraint = refundee_token_account.owner == incentive.refundee)] // owner field is bugged in v0.22
+    #[account(mut, constraint = refundee_token_account.owner == incentive.refundee)]
+    // owner field is bugged in v0.22
     pub refundee_token_account: Account<'info, TokenAccount>,
 
     /// Token program.

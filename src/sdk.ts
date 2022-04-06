@@ -5,12 +5,14 @@ import {
   SolanaAugmentedProvider,
   TransactionEnvelope,
 } from "@saberhq/solana-contrib";
-import type { PublicKey, Signer } from "@solana/web3.js";
+import { getATAAddress, getTokenAccount, TOKEN_PROGRAM_ID } from "@saberhq/token-utils";
+import { PublicKey, Signer } from "@solana/web3.js";
 import { SystemProgram } from "@solana/web3.js";
+import { FACTORY_ADDRESS, POSITION_SEED } from "@cykura/sdk";
 
 import { CykuraStakerPrograms, CYKURA_STAKER_ADDRESSES, CYKURA_STAKER_IDLS } from "./constants";
-import { findIncentiveAddress, IncentiveWrapper } from "./wrappers/cykuraStaker";
-import { PendingIncentive } from "./wrappers/cykuraStaker/types";
+import { DepositWrapper, findDepositAddress, findIncentiveAddress, findStakerAddress, IncentiveWrapper } from "./wrappers/cykuraStaker";
+import { PendingDeposit, PendingIncentive } from "./wrappers/cykuraStaker/types";
 
 /**
  * TribecaSDK.
@@ -43,6 +45,9 @@ export class CykuraStakerSDK {
     return new CykuraStakerSDK(new SolanaAugmentedProvider(provider), programs);
   }
 
+  /**
+   * Returns a wrapper and a transaction to create a liquidity mining incentive
+   */
   async createIncentive({
     rewardToken,
     pool,
@@ -70,7 +75,7 @@ export class CykuraStakerSDK {
       tx: new TransactionEnvelope(
         this.provider,
         [
-          await this.programs.CykuraStaker.methods.initializeElectorate(
+          await this.programs.CykuraStaker.methods.createIncentive(
             startTime,
             endTime,
           ).accounts({
@@ -86,4 +91,42 @@ export class CykuraStakerSDK {
     };
   }
 
+  async getDeposit({ deposit }: { deposit: PublicKey }) {
+
+  }
+  /**
+   * Returns a TX to create an LP token deposit
+   */
+   async createDeposit({
+    depositorTokenAccount,
+  }: {
+    depositorTokenAccount: PublicKey,
+  }): Promise<PendingDeposit> {
+    const { mint } = await getTokenAccount(this.provider, depositorTokenAccount)
+    const [deposit] = await findDepositAddress(mint)
+    const [staker] = await findStakerAddress()
+    const depositVault = await getATAAddress({ mint, owner: staker })
+    const [tokenizedPosition] = await PublicKey.findProgramAddress([
+      POSITION_SEED,
+      mint.toBuffer()
+    ], FACTORY_ADDRESS)
+
+    return {
+      deposit: new DepositWrapper(this, deposit),
+      tx: new TransactionEnvelope(
+        this.provider,
+        [
+          await this.programs.CykuraStaker.methods.createDeposit().accounts({
+            deposit,
+            depositorTokenAccount,
+            depositVault,
+            tokenizedPosition,
+            depositor: this.provider.wallet.publicKey,
+            systemProgram: SystemProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          }).instruction(),
+        ],
+      ),
+    }
+  }
 }

@@ -2,12 +2,10 @@ import { TransactionEnvelope } from "@saberhq/solana-contrib";
 import { getATAAddress, getOrCreateATA } from "@saberhq/token-utils";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { PublicKey } from "@solana/web3.js";
-import { Keypair, SystemProgram } from "@solana/web3.js";
 import type BN from "bn.js";
-import { CykuraStakerProgram, IncentiveData } from "../../programs";
+import { IncentiveData } from "../../programs";
 import { CykuraStakerSDK } from "../../sdk";
-import { findIncentiveAddress, findStakerAddress } from "./pda";
-import { PendingIncentive } from "./types";
+import { findStakerAddress } from "./pda";
 
 export class IncentiveWrapper {
   private _incentive: IncentiveData | null = null;

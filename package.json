@@ -5,6 +5,8 @@
         "idl:generate:nolint": "./scripts/parse-idls.sh && RUN_ESLINT=none ./scripts/generate-idl-types.sh"
     },
     "dependencies": {
+        "@cykura/sdk": "^0.1.18",
+        "@cykura/sdk-core": "^0.1.5",
         "@gokiprotocol/client": "^0.6.1",
         "@project-serum/anchor": "^0.23.0",
         "@saberhq/anchor-contrib": "^1.12.58",
@@ -13,8 +15,6 @@
         "@saberhq/token-utils": "^1.12.44",
         "@solana/spl-token": "^0.1.8",
         "@tribecahq/tribeca-sdk": "^0.4.0",
-        "@uniswap/sdk-core": "https://github.com/cyclos-io/sdk-core.git",
-        "@uniswap/v3-sdk": "https://github.com/cyclos-io/sdk.git#eb6178ca7aa7e6f3341e3635ef2f0252888ae6dc",
         "jsbi": "^4.1.0"
     },
     "devDependencies": {

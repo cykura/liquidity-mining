@@ -13,7 +13,7 @@ pub struct CreateDeposit<'info> {
         init,
         seeds = [
             b"Deposit".as_ref(),
-            deposit_vault.mint.as_ref()
+            depositor_token_account.mint.as_ref()
         ],
         bump,
         payer = depositor,

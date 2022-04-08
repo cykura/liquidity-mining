@@ -1,8 +1,8 @@
 import type { TransactionEnvelope } from "@saberhq/solana-contrib";
-import type { PublicKey } from "@solana/web3.js";
 import { DepositWrapper } from "./deposit";
 
 import type { IncentiveWrapper } from "./incentive";
+import { RewardWrapper } from "./reward";
 
 export type PendingIncentive = {
   wrapper: IncentiveWrapper;
@@ -13,3 +13,9 @@ export type PendingDeposit = {
   deposit: DepositWrapper;
   tx: TransactionEnvelope;
 };
+
+export type PendingReward = {
+  reward: RewardWrapper;
+  tx: TransactionEnvelope;
+};
+

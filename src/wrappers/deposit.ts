@@ -2,8 +2,8 @@ import { TransactionEnvelope } from "@saberhq/solana-contrib";
 import { getATAAddress, getOrCreateATA } from "@saberhq/token-utils";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { PublicKey } from "@solana/web3.js";
-import { DepositData } from "../../programs";
-import { CykuraStakerSDK } from "../../sdk";
+import { DepositData } from "../programs";
+import { CykuraStakerSDK } from "../sdk";
 import { findStakerAddress } from "./pda";
 
 export class DepositWrapper {

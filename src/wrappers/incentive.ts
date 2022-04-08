@@ -3,8 +3,8 @@ import { getATAAddress, getOrCreateATA } from "@saberhq/token-utils";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { PublicKey } from "@solana/web3.js";
 import type BN from "bn.js";
-import { IncentiveData } from "../../programs";
-import { CykuraStakerSDK } from "../../sdk";
+import { IncentiveData } from "../programs";
+import { CykuraStakerSDK } from "../sdk";
 import { findStakerAddress } from "./pda";
 
 export class IncentiveWrapper {

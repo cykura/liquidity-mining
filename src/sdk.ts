@@ -11,11 +11,11 @@ import { SystemProgram } from "@solana/web3.js";
 import { FACTORY_ADDRESS, POSITION_SEED } from "@cykura/sdk";
 
 import { CykuraStakerPrograms, CYKURA_STAKER_ADDRESSES, CYKURA_STAKER_IDLS } from "./constants";
-import { DepositWrapper, findDepositAddress, findIncentiveAddress, findStakerAddress, IncentiveWrapper } from "./wrappers/cykuraStaker";
-import { PendingDeposit, PendingIncentive } from "./wrappers/cykuraStaker/types";
+import { DepositWrapper, findDepositAddress, findIncentiveAddress, findRewardAddress, findStakerAddress, IncentiveWrapper, RewardWrapper } from "./wrappers";
+import { PendingDeposit, PendingIncentive, PendingReward } from "./wrappers/types";
 
 /**
- * TribecaSDK.
+ * CykuraStakerSDK.
  */
 export class CykuraStakerSDK {
   constructor(
@@ -91,9 +91,6 @@ export class CykuraStakerSDK {
     };
   }
 
-  async getDeposit({ deposit }: { deposit: PublicKey }) {
-
-  }
   /**
    * Returns a TX to create an LP token deposit
    */
@@ -124,6 +121,35 @@ export class CykuraStakerSDK {
             depositor: this.provider.wallet.publicKey,
             systemProgram: SystemProgram.programId,
             tokenProgram: TOKEN_PROGRAM_ID,
+          }).instruction(),
+        ],
+      ),
+    }
+  }
+
+  /**
+   * Returns a TX to create a reward account
+   */
+   async createRewardAccount({
+    rewardToken,
+    rewardOwner = this.provider.wallet.publicKey,
+  }: {
+    rewardToken: PublicKey,
+    rewardOwner?: PublicKey,
+  }): Promise<PendingReward> {
+    const [reward] = await findRewardAddress(rewardToken, rewardOwner)
+
+    return {
+      reward: new RewardWrapper(this, reward),
+      tx: new TransactionEnvelope(
+        this.provider,
+        [
+          await this.programs.CykuraStaker.methods.createRewardAccount().accounts({
+            reward,
+            rewardToken,
+            rewardOwner,
+            payer: this.provider.wallet.publicKey,
+            systemProgram: SystemProgram.programId,
           }).instruction(),
         ],
       ),

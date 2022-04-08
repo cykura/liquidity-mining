@@ -8,18 +8,19 @@ import {
 import { getATAAddress, getTokenAccount, TOKEN_PROGRAM_ID } from "@saberhq/token-utils";
 import { PublicKey, Signer } from "@solana/web3.js";
 import { SystemProgram } from "@solana/web3.js";
-import { FACTORY_ADDRESS, POSITION_SEED } from "@cykura/sdk";
+import { CyclosCore, FACTORY_ADDRESS, IDL as CYCLOS_CORE_IDL, OBSERVATION_SEED, POOL_SEED, POSITION_SEED, TICK_SEED, u16ToSeed, u32ToSeed } from "@cykura/sdk";
 
 import { CykuraStakerPrograms, CYKURA_STAKER_ADDRESSES, CYKURA_STAKER_IDLS } from "./constants";
-import { DepositWrapper, findDepositAddress, findIncentiveAddress, findRewardAddress, findStakerAddress, IncentiveWrapper, RewardWrapper } from "./wrappers";
-import { PendingDeposit, PendingIncentive, PendingReward } from "./wrappers/types";
+import { DepositWrapper, findDepositAddress, findIncentiveAddress, findRewardAddress, findStakeAddress, findStakerAddress, IncentiveWrapper, RewardWrapper } from "./wrappers";
+import { PendingDeposit, PendingIncentive, PendingReward, PendingStake } from "./wrappers/types";
+import { StakeWrapper } from "./wrappers/stake";
 
 /**
  * CykuraStakerSDK.
  */
 export class CykuraStakerSDK {
   constructor(
-    readonly provider: AugmentedProvider,
+    readonly provider: SolanaAugmentedProvider,
     readonly programs: CykuraStakerPrograms
   ) {}
 
@@ -149,6 +150,72 @@ export class CykuraStakerSDK {
             rewardToken,
             rewardOwner,
             payer: this.provider.wallet.publicKey,
+            systemProgram: SystemProgram.programId,
+          }).instruction(),
+        ],
+      ),
+    }
+  }
+
+  async stakeToken({
+    deposit,
+    incentive
+  }: {
+    deposit: DepositWrapper,
+    incentive: IncentiveWrapper,
+  }): Promise<PendingStake> {
+    const { mint } = await deposit.data()
+    const [tokenizedPosition] = await PublicKey.findProgramAddress([
+      POSITION_SEED,
+      mint.toBuffer()
+    ], FACTORY_ADDRESS)
+    const [stake] = await findStakeAddress(mint, incentive.incentiveKey)
+
+    // @ts-ignore
+    const cyclosCore = new anchor.Program<CyclosCore>(CYCLOS_CORE_IDL, FACTORY_ADDRESS, this.provider.provider)
+    const { poolId, tickLower, tickUpper } = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPosition)
+    const { token0, token1, fee, observationIndex } = await cyclosCore.account.tokenizedPositionState.fetch(poolId)
+
+    const [tickLowerState] = await PublicKey.findProgramAddress([
+      TICK_SEED,
+      token0.toBuffer(),
+      token1.toBuffer(),
+      u32ToSeed(fee),
+      u32ToSeed(tickLower)
+    ], FACTORY_ADDRESS)
+
+    const [tickUpperState] = await PublicKey.findProgramAddress([
+      TICK_SEED,
+      token0.toBuffer(),
+      token1.toBuffer(),
+      u32ToSeed(fee),
+      u32ToSeed(tickUpper)
+    ], FACTORY_ADDRESS)
+
+    const [latestObservation] = await  PublicKey.findProgramAddress(
+      [
+        OBSERVATION_SEED,
+        token0.toBuffer(),
+        token1.toBuffer(),
+        u32ToSeed(fee),
+        u16ToSeed(observationIndex)
+      ], FACTORY_ADDRESS)
+
+    return {
+      stake: new StakeWrapper(this, stake),
+      tx: new TransactionEnvelope(
+        this.provider,
+        [
+          await this.programs.CykuraStaker.methods.stakeToken().accounts({
+            stake,
+            incentive: incentive.incentiveKey,
+            deposit: deposit.depositKey,
+            tokenizedPosition,
+            pool: poolId,
+            tickLower: tickLowerState,
+            tickUpper: tickUpperState,
+            latestObservation,
+            owner: this.provider.wallet.publicKey,
             systemProgram: SystemProgram.programId,
           }).instruction(),
         ],

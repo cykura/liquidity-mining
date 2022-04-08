@@ -20,7 +20,7 @@ export class RewardWrapper {
   }
 
   async reload(): Promise<RewardData> {
-    return await this.program.account.deposit.fetch(this.rewardKey);
+    return await this.program.account.reward.fetch(this.rewardKey);
   }
 
   async data(): Promise<RewardData> {

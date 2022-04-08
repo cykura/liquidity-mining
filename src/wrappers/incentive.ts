@@ -52,22 +52,20 @@ export class IncentiveWrapper {
       })
     }
 
-    return {
-      tx: new TransactionEnvelope(
-        this.provider,
-        [
-          await this.sdk.programs.CykuraStaker.methods.addReward(
-            reward,
-          ).accounts({
-            incentive: this.incentiveKey,
-            vault,
-            payer: this.provider.wallet.publicKey,
-            payerTokenAccount,
-            tokenProgram: TOKEN_PROGRAM_ID
-          }).instruction()
-        ],
-      ),
-    };
+    return new TransactionEnvelope(
+      this.provider,
+      [
+        await this.sdk.programs.CykuraStaker.methods.addReward(
+          reward,
+        ).accounts({
+          incentive: this.incentiveKey,
+          vault,
+          payer: this.provider.wallet.publicKey,
+          payerTokenAccount,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }).instruction()
+      ],
+    )
   }
 
   /**

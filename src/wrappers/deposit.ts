@@ -63,4 +63,19 @@ export class DepositWrapper {
 
     return tx
   }
+
+  async transferDeposit(to: PublicKey): Promise<TransactionEnvelope> {
+    const { owner } = await this.data()
+
+    return new TransactionEnvelope(
+      this.provider,
+      [
+        await this.program.methods.transferDeposit().accounts({
+          deposit: this.depositKey,
+          owner,
+          to,
+        }).instruction()
+      ],
+    )
+  }
 }

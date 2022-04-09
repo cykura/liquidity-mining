@@ -50,8 +50,8 @@ pub mod cykura_staker {
     }
 
     /// Creates a new [Incentive], boosted by voting power in the provided [Locker].
-    pub fn create_boosted_incentive(
-        ctx: Context<CreateBoostedIncentive>,
+    pub fn create_incentive_boosted(
+        ctx: Context<CreateIncentiveBoosted>,
         start_time: i64,
         end_time: i64,
     ) -> Result<()> {
@@ -73,7 +73,7 @@ pub mod cykura_staker {
             ErrorCode::IncentiveDurationIsTooLong
         );
 
-        ctx.accounts.create_boosted_incentive(
+        ctx.accounts.create_incentive_boosted(
             *ctx.bumps.get("incentive").unwrap(),
             start_time,
             end_time,

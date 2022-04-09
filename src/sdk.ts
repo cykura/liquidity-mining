@@ -93,6 +93,55 @@ export class CykuraStakerSDK {
   }
 
   /**
+   * Returns a wrapper and a transaction to create a boosted liquidity mining incentive
+   */
+   async createIncentiveBoosted({
+    rewardToken,
+    pool,
+    startTime,
+    endTime,
+    locker,
+    refundee = this.provider.wallet.publicKey,
+  }: {
+    rewardToken: PublicKey,
+    pool: PublicKey,
+    startTime: BN,
+    endTime: BN,
+    locker: PublicKey,
+    refundee: PublicKey,
+  }): Promise<PendingIncentive> {
+    const [incentive] = await findIncentiveAddress(
+      rewardToken,
+      pool,
+      refundee,
+      startTime,
+      endTime
+    )
+    const wrapper = new IncentiveWrapper(this, incentive);
+
+    return {
+      wrapper,
+      tx: new TransactionEnvelope(
+        this.provider,
+        [
+          await this.programs.CykuraStaker.methods.createIncentive(
+            startTime,
+            endTime,
+          ).accounts({
+            incentive,
+            rewardToken,
+            pool,
+            refundee,
+            payer: this.provider.wallet.publicKey,
+            systemProgram: SystemProgram.programId,
+            locker,
+          }).instruction(),
+        ],
+      ),
+    };
+  }
+
+  /**
    * Returns a TX to create an LP token deposit
    */
    async createDeposit({

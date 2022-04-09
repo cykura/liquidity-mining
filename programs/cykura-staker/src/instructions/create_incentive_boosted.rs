@@ -2,10 +2,10 @@ use crate::*;
 use locked_voter::Locker;
 use std::mem::size_of;
 
-/// Accounts for [cykura_staker::create_boosted_incentive].
+/// Accounts for [cykura_staker::create_incentive_boosted].
 #[derive(Accounts)]
 #[instruction(start_time: i64, end_time: i64)]
-pub struct CreateBoostedIncentive<'info> {
+pub struct CreateIncentiveBoosted<'info> {
     /// [Incentive]
     #[account(
         init,
@@ -44,7 +44,7 @@ pub struct CreateBoostedIncentive<'info> {
     pub locker: Account<'info, Locker>,
 }
 
-impl<'info> CreateBoostedIncentive<'info> {
+impl<'info> CreateIncentiveBoosted<'info> {
     /// Creates a new [Incentive], boosted by voting power in the [Locker].
     ///
     /// # Arguments
@@ -53,7 +53,7 @@ impl<'info> CreateBoostedIncentive<'info> {
     /// * `end_time` - The time when rewards stop accruing.
     /// * `reward` - The amount of reward tokens to be distributed.
     ///
-    pub fn create_boosted_incentive(
+    pub fn create_incentive_boosted(
         &mut self,
         bump: u8,
         start_time: i64,

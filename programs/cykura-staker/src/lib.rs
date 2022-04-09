@@ -170,18 +170,7 @@ pub mod cykura_staker {
 
     /// Unstakes a Cykura LP token, with rewards boosted by voting power
     pub fn unstake_token_boosted(ctx: Context<UnstakeTokenBoosted>) -> Result<()> {
-        let incentive = &ctx.accounts.incentive;
-        let block_timestamp = Clock::get().unwrap().unix_timestamp;
-
-        // anyone can call [cykura_staker::unstake_token] if the block time is after the end time of the incentive
-        if block_timestamp < incentive.end_time {
-            require!(
-                ctx.accounts.deposit.owner == ctx.accounts.signer.key(),
-                ErrorCode::OnlyOwnerCanWithdrawTokenBeforeEndTime
-            );
-        }
-
-        ctx.accounts.unstake_token_boosted(block_timestamp)
+        ctx.accounts.unstake_token_boosted()
     }
 
     /// Transfers `amount_requested` of accrued `reward_token` rewards from the contract to the recipient `to`

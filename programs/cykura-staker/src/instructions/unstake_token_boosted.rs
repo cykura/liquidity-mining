@@ -93,7 +93,8 @@ pub struct UnstakeTokenBoosted<'info> {
 
 impl<'info> UnstakeTokenBoosted<'info> {
     /// Unstakes a Cykura LP token, with rewards boosted by voting power
-    pub fn unstake_token_boosted(&mut self, block_timestamp: i64) -> Result<()> {
+    pub fn unstake_token_boosted(&mut self) -> Result<()> {
+        let block_timestamp = Clock::get().unwrap().unix_timestamp;
         let deposit = &mut self.deposit;
         let incentive = &mut self.incentive;
         let stake = &mut self.stake;

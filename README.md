@@ -35,5 +35,9 @@ min((vliquidity∗40/100)+(Totalvliquidity∗VotingPower/VotingTotal∗(100−40
 ### Reads
 
 1. Every wrapper (Incentive, Reward, Stake and Deposit) has a `data()` function to fetch and cache accounts.
-2. Unclaimed reward- TODO
+2. Unclaimed reward- [stake.getRewardInfo()](./src/wrappers/stake.ts#L176)
 3. APR- TODO
+4. Boost percentage- TODO
+5. Find all deposits of a user- `deposits.fetchAll()`, then filter for the wallet's address
+6. If a deposit is staked in an incentive- Generate the stake address using the deposit and incentive addresses.
+

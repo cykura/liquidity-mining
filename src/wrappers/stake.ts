@@ -17,7 +17,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 import { findEscrowAddress, LockerWrapper, TribecaSDK, VoteEscrow } from "@tribecahq/tribeca-sdk";
 import { StakeData } from "../programs";
-import { computeRewardAmount, computeRewardAmountBoosted, RewardOwed } from "../rewardMath";
+import { computeBoostPercent, computeRewardAmount, computeRewardAmountBoosted, RewardOwed } from "../rewardMath";
 import { CykuraStakerSDK } from "../sdk";
 import { DepositWrapper } from "./deposit";
 import { IncentiveWrapper } from "./incentive";

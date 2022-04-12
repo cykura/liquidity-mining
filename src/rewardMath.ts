@@ -91,3 +91,32 @@ export function computeRewardAmountBoosted({
 
   return { reward, secondsInsideX32 }
 }
+
+/**
+ * Compute boost percent for a user's LP position
+ *
+ * @param liquidity The liquidity in the LP NFT
+ * @param poolLiquidity The total liquidity in the pool
+ * @param votingPower The voting power of the user's wallet
+ * @param totalVotingPower Total voting power inside the boosting locker
+ * @returns
+ */
+export function computeBoostPercent(
+  liquidity: BN,
+  poolLiquidity: BN,
+  votingPower: BN,
+  totalVotingPower: BN,
+): number {
+  const effectiveLiquidity = BN.min(
+    liquidity.muln(0.4)
+      .add(
+        poolLiquidity.mul(votingPower).div(totalVotingPower).muln(0.6)
+      ),
+    liquidity
+  )
+
+  const boost = effectiveLiquidity.sub(liquidity)
+  const boostPercent = boost.div(liquidity).muln(100).toNumber()
+
+  return boostPercent
+}

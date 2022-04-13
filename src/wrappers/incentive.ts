@@ -21,7 +21,7 @@ export class IncentiveWrapper {
   }
 
   async reload(): Promise<IncentiveData> {
-    return await this.program.account.incentive.fetch(this.incentiveKey);
+    return this.program.account.incentive.fetch(this.incentiveKey);
   }
 
   async data(): Promise<IncentiveData> {
@@ -31,19 +31,20 @@ export class IncentiveWrapper {
     return this._incentive;
   }
 
-  async addReward({
-    reward,
-    payerTokenAccount,
-  }: {
-    reward: BN,
-    payerTokenAccount?: PublicKey,
-  }) {
+  async addReward(reward: BN, payerTokenAccount?: PublicKey) {
+    const tx = new TransactionEnvelope(this.provider, [])
     const [staker] = await findStakerAddress()
     const { rewardToken } = await this.data()
-    const vault = await getATAAddress({
+
+    const { address: vault, instruction: createVaultIx } = await getOrCreateATA({
+      provider: this.provider,
       mint: rewardToken,
       owner: staker,
     })
+    console.log('vault', vault.toString())
+    if (createVaultIx) {
+      tx.append(createVaultIx)
+    }
 
     if (!payerTokenAccount) {
       payerTokenAccount = await getATAAddress({
@@ -52,20 +53,17 @@ export class IncentiveWrapper {
       })
     }
 
-    return new TransactionEnvelope(
-      this.provider,
-      [
-        await this.sdk.programs.CykuraStaker.methods.addReward(
-          reward,
-        ).accounts({
-          incentive: this.incentiveKey,
-          vault,
-          payer: this.provider.wallet.publicKey,
-          payerTokenAccount,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }).instruction()
-      ],
-    )
+    tx.append(await this.sdk.programs.CykuraStaker.methods.addReward(
+      reward,
+    ).accounts({
+      incentive: this.incentiveKey,
+      vault,
+      payer: this.provider.wallet.publicKey,
+      payerTokenAccount,
+      tokenProgram: TOKEN_PROGRAM_ID
+    }).instruction())
+
+    return tx
   }
 
   /**

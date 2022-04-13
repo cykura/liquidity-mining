@@ -8,6 +8,8 @@ import { createMintsAndAirdrop } from "./utils/createMintsAndAirdrop"
 import { setupEscrowAndLockTokens } from "./utils/setupEscrowAndLockTokens"
 import { setupWorkspace } from "./utils/setupWorkspace"
 import { createCyclosPosition } from "./utils/createCyclosPosition"
+import { DepositWrapper, IncentiveWrapper, RewardWrapper } from "../src"
+import { StakeWrapper } from "../src/wrappers/stake"
 
 chai.use(chaiSolana)
 
@@ -41,8 +43,13 @@ describe('cykura-staker', () => {
     vault1: PublicKey,
   }
 
+  const rewardAmount = new BN(1_000_000)
   let startTime: BN
   let endTime: BN
+  let incentiveWrapper: IncentiveWrapper
+  let depositWrapper: DepositWrapper
+  let rewardWrapper: RewardWrapper
+  let stakeWrapper: StakeWrapper
 
   it('create token mints and airdrop to wallet', async () => {
     ({ token0, token1, ata0, ata1 } = await createMintsAndAirdrop(provider))
@@ -55,15 +62,14 @@ describe('cykura-staker', () => {
     ammAccounts = await createCyclosPosition(provider, token0, token1)
   })
 
-  it('create a new incentive', async () => {
+  it('create a new boosted incentive', async () => {
     const slot = await provider.connection.getSlot()
     const blockTime = await provider.connection.getBlockTime(slot)
-    console.log('block time', blockTime)
 
     startTime = new BN(blockTime + 10)
     endTime = new BN(blockTime + 20)
 
-    const { wrapper: incentiveWrapper, tx: createIncentiveTx } = await cykuraStakerSdk.createIncentiveBoosted({
+    const { wrapper: _incentiveWrapper, tx: createIncentiveTx } = await cykuraStakerSdk.createIncentiveBoosted({
       rewardToken: token0,
       pool: ammAccounts.poolState,
       startTime,
@@ -71,16 +77,24 @@ describe('cykura-staker', () => {
       locker,
       refundee: owner,
     })
-    await expectTX(createIncentiveTx, "create incentive").to.be.fulfilled;
+    incentiveWrapper = _incentiveWrapper
+
+    await expectTX(createIncentiveTx, "create incentive").to.be.fulfilled
 
     const incentiveData = await incentiveWrapper.data()
-    console.log('incentive data', incentiveWrapper)
     assert(incentiveData.rewardToken.equals(token0))
     assert(incentiveData.pool.equals(ammAccounts.poolState))
     assert(incentiveData.refundee.equals(owner))
-
     assert(incentiveData.startTime.eq(startTime))
     assert(incentiveData.endTime.eq(endTime))
     assert(incentiveData.boostLocker.equals(locker))
+  })
+
+  it('add reward in the incentive', async () => {
+    const addRewardTx = await incentiveWrapper.addReward(rewardAmount)
+    await expectTX(addRewardTx, "add reward").to.be.fulfilled
+
+    const incentiveData = await incentiveWrapper.reload()
+    assert(incentiveData.totalRewardUnclaimed.eq(rewardAmount))
   })
 })

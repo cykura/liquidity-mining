@@ -29,7 +29,7 @@ pub struct CreateDeposit<'info> {
     #[account(
         mut,
         address = get_associated_token_address(
-            &Pubkey::find_program_address(&[], &cyclos_core::ID).0,
+            &Pubkey::find_program_address(&[], &crate::id()).0,
             &depositor_token_account.mint
         )
     )]

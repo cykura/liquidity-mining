@@ -27,6 +27,7 @@ pub mod cykura_staker {
         start_time: i64,
         end_time: i64,
     ) -> Result<()> {
+        msg!("creating incentive");
         let block_timestamp = Clock::get().unwrap().unix_timestamp;
         require!(
             block_timestamp < start_time,

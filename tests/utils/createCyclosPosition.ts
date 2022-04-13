@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { web3, BN } from '@project-serum/anchor'
 import { expectTX } from '@saberhq/chai-solana'
-import { SolanaProvider, TransactionEnvelope } from "@saberhq/solana-contrib"
+import { SolanaAugmentedProvider, TransactionEnvelope } from "@saberhq/solana-contrib"
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import {
   BITMAP_SEED,
@@ -19,7 +19,7 @@ import {
 } from '@cykura/sdk'
 
 export async function createCyclosPosition(
-  provider: SolanaProvider,
+  provider: SolanaAugmentedProvider,
   token0: web3.PublicKey,
   token1: web3.PublicKey
 ) {

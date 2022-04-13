@@ -118,13 +118,12 @@ export class CykuraStakerSDK {
       endTime
     )
     const wrapper = new IncentiveWrapper(this, incentive);
-
     return {
       wrapper,
       tx: new TransactionEnvelope(
         this.provider,
         [
-          await this.programs.CykuraStaker.methods.createIncentive(
+          await this.programs.CykuraStaker.methods.createIncentiveBoosted(
             startTime,
             endTime,
           ).accounts({

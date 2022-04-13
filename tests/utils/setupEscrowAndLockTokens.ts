@@ -1,7 +1,7 @@
 import { GokiSDK } from "@gokiprotocol/client"
 import { web3, BN } from "@project-serum/anchor"
 import { expectTX } from "@saberhq/chai-solana"
-import { SolanaProvider } from "@saberhq/solana-contrib"
+import { SolanaAugmentedProvider, SolanaProvider } from "@saberhq/solana-contrib"
 import { findGovernorAddress, findLockerAddress, findEscrowAddress, TribecaSDK, LockerWrapper } from "@tribecahq/tribeca-sdk"
 
 /**
@@ -10,7 +10,7 @@ import { findGovernorAddress, findLockerAddress, findEscrowAddress, TribecaSDK, 
  *
  * @param provider
  */
- export async function setupEscrowAndLockTokens(provider: SolanaProvider, govTokenMint: web3.PublicKey): Promise<{
+ export async function setupEscrowAndLockTokens(provider: SolanaAugmentedProvider, govTokenMint: web3.PublicKey): Promise<{
     base: web3.PublicKey
     smartWallet: web3.PublicKey
     governor: web3.PublicKey

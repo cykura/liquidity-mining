@@ -1,7 +1,10 @@
 import * as anchor from '@project-serum/anchor'
-import { Program } from "@project-serum/anchor"
+import { chaiSolana } from '@saberhq/chai-solana'
 import { SolanaProvider } from "@saberhq/solana-contrib"
-import { CykuraStaker } from "../../target/types/cykura_staker"
+import chai from "chai"
+import { CykuraStakerSDK } from '../../src'
+
+chai.use(chaiSolana)
 
 export function setupWorkspace() {
   const anchorProvider = anchor.Provider.env()
@@ -13,7 +16,7 @@ export function setupWorkspace() {
     opts: anchorProvider.opts,
   })
 
-  const program = anchor.workspace.CykuraStaker as Program<CykuraStaker>
-
-  return { program, provider }
+  return CykuraStakerSDK.load({
+    provider,
+  });
 }

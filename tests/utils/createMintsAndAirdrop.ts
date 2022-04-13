@@ -1,6 +1,6 @@
 import { web3 } from "@project-serum/anchor"
 import { expectTX } from "@saberhq/chai-solana"
-import { SolanaProvider, TransactionEnvelope } from "@saberhq/solana-contrib"
+import { SolanaAugmentedProvider, SolanaProvider, TransactionEnvelope } from "@saberhq/solana-contrib"
 import { Token, MintLayout, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token"
 
 /**
@@ -8,7 +8,7 @@ import { Token, MintLayout, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from
  * @param provider
  * @returns Mint and ATA addresses
  */
- export async function createMintsAndAirdrop(provider: SolanaProvider): Promise<{
+ export async function createMintsAndAirdrop(provider: SolanaAugmentedProvider): Promise<{
     token0: web3.PublicKey
     token1: web3.PublicKey
     ata0: web3.PublicKey

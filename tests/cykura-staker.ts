@@ -3,7 +3,7 @@ import * as anchor from '@project-serum/anchor'
 import { Program, web3, BN } from '@project-serum/anchor'
 import { PublicKey, TransactionEnvelope } from '@saberhq/solana-contrib'
 import { chaiSolana, expectTX } from '@saberhq/chai-solana'
-import { expect } from 'chai'
+import { assert, expect } from 'chai'
 import { createMintsAndAirdrop } from "./utils/createMintsAndAirdrop"
 import { setupEscrowAndLockTokens } from "./utils/setupEscrowAndLockTokens"
 import { setupWorkspace } from "./utils/setupWorkspace"
@@ -18,7 +18,9 @@ chai.use(chaiSolana)
  * Token0 is also the governance token which gives a liquidity mining boost.
  */
 describe('cykura-staker', () => {
-  const { program, provider } = setupWorkspace()
+  const cykuraStakerSdk = setupWorkspace()
+  const provider = cykuraStakerSdk.provider
+  const owner = provider.wallet.publicKey
 
   // token accounts and ATAs
   let token0: web3.PublicKey
@@ -39,6 +41,9 @@ describe('cykura-staker', () => {
     vault1: PublicKey,
   }
 
+  let startTime: BN
+  let endTime: BN
+
   it('create token mints and airdrop to wallet', async () => {
     ({ token0, token1, ata0, ata1 } = await createMintsAndAirdrop(provider))
   })
@@ -55,11 +60,30 @@ describe('cykura-staker', () => {
     const blockTime = await provider.connection.getBlockTime(slot)
     console.log('block time', blockTime)
 
-    // await program.methods.createIncentive()
-    // await program.rpc.createIncentive(new BN(0), new BN(0), {
-    //   accounts: {
-    //     poolState: ammAccounts.poolState
-    //   }
-    // })
+    startTime = new BN(blockTime + 10)
+    endTime = new BN(blockTime + 20)
+
+    const { wrapper: incentiveWrapper, tx: createIncentiveTx } = await cykuraStakerSdk.createIncentiveBoosted({
+      rewardToken: token0,
+      pool: ammAccounts.poolState,
+      startTime,
+      endTime,
+      locker,
+      refundee: owner,
+    })
+    // console.log('sending tx')
+    // console.log('signer', owner.toString())
+    // await createIncentiveTx.send()
+    await expectTX(createIncentiveTx, "create incentive").to.be.fulfilled;
+
+    const incentiveData = await incentiveWrapper.data()
+    console.log('incentive data', incentiveWrapper)
+    assert(incentiveData.rewardToken.equals(token0))
+    assert(incentiveData.pool.equals(ammAccounts.poolState))
+    assert(incentiveData.refundee.equals(owner))
+
+    assert(incentiveData.startTime.eq(startTime))
+    assert(incentiveData.endTime.eq(endTime))
+    assert(incentiveData.boostLocker.equals(locker))
   })
 })

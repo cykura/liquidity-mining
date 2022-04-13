@@ -19,12 +19,12 @@ export const findIncentiveAddress = async (
 ): Promise<[PublicKey, number]> => {
   return await PublicKey.findProgramAddress(
     [
-      utils.bytes.utf8.encode("Locker"),
+      utils.bytes.utf8.encode("Incentive"),
       rewardToken.toBuffer(),
       pool.toBuffer(),
       refundee.toBuffer(),
-      startTime.toBuffer(),
-      endTime.toBuffer()
+      startTime.toTwos(64).toArrayLike(Buffer, 'be', 8),
+      endTime.toTwos(64).toArrayLike(Buffer, 'be', 8),
     ],
     CYKURA_STAKER_ADDRESSES.CykuraStaker
   );

@@ -41,6 +41,8 @@ describe('cykura-staker', () => {
     poolState: PublicKey,
     vault0: PublicKey,
     vault1: PublicKey,
+    nftMint: PublicKey,
+    nftAccount: PublicKey,
   }
 
   const rewardAmount = new BN(1_000_000)
@@ -96,5 +98,13 @@ describe('cykura-staker', () => {
 
     const incentiveData = await incentiveWrapper.reload()
     assert(incentiveData.totalRewardUnclaimed.eq(rewardAmount))
+  })
+
+  it('deposit NFT in staker', async () => {
+    const { deposit: _depositWrapper, tx: createDepositTx } = await cykuraStakerSdk.createDeposit(ammAccounts.nftAccount)
+    depositWrapper = _depositWrapper
+    await createDepositTx.send()
+
+    const depositData = await depositWrapper.data()
   })
 })

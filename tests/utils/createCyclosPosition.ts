@@ -293,5 +293,7 @@ export async function createCyclosPosition(
     poolState,
     vault0,
     vault1,
+    nftMint: nftMintKeypair.publicKey,
+    nftAccount: positionNftAccount,
   }
 }

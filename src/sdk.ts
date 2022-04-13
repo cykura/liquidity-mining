@@ -5,7 +5,7 @@ import {
   SolanaAugmentedProvider,
   TransactionEnvelope,
 } from "@saberhq/solana-contrib";
-import { getATAAddress, getTokenAccount, TOKEN_PROGRAM_ID } from "@saberhq/token-utils";
+import { getATAAddress, getOrCreateATA, getTokenAccount, TOKEN_PROGRAM_ID } from "@saberhq/token-utils";
 import { PublicKey, Signer } from "@solana/web3.js";
 import { SystemProgram } from "@solana/web3.js";
 import { CyclosCore, FACTORY_ADDRESS, IDL as CYCLOS_CORE_IDL, OBSERVATION_SEED, POOL_SEED, POSITION_SEED, TICK_SEED, u16ToSeed, u32ToSeed } from "@cykura/sdk";
@@ -143,49 +143,50 @@ export class CykuraStakerSDK {
   /**
    * Returns a TX to create an LP token deposit
    */
-   async createDeposit({
-    depositorTokenAccount,
-  }: {
-    depositorTokenAccount: PublicKey,
-  }): Promise<PendingDeposit> {
+   async createDeposit(depositorTokenAccount: PublicKey): Promise<PendingDeposit> {
+    const tx = new TransactionEnvelope(this.provider, [])
     const { mint } = await getTokenAccount(this.provider, depositorTokenAccount)
     const [deposit] = await findDepositAddress(mint)
     const [staker] = await findStakerAddress()
-    const depositVault = await getATAAddress({ mint, owner: staker })
+
+    const { address: depositVault, instruction: createVaultIx } = await getOrCreateATA({
+      provider: this.provider,
+      mint,
+      owner: staker,
+    })
+    if (createVaultIx) {
+      tx.append(createVaultIx)
+    }
+    console.log('mint', mint.toString(), 'deposit vault', depositVault.toString())
+
     const [tokenizedPosition] = await PublicKey.findProgramAddress([
       POSITION_SEED,
       mint.toBuffer()
     ], FACTORY_ADDRESS)
 
+    tx.append(await this.programs.CykuraStaker.methods.createDeposit().accounts({
+      deposit,
+      depositorTokenAccount,
+      depositVault,
+      tokenizedPosition,
+      depositor: this.provider.wallet.publicKey,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }).instruction())
+
     return {
       deposit: new DepositWrapper(this, deposit),
-      tx: new TransactionEnvelope(
-        this.provider,
-        [
-          await this.programs.CykuraStaker.methods.createDeposit().accounts({
-            deposit,
-            depositorTokenAccount,
-            depositVault,
-            tokenizedPosition,
-            depositor: this.provider.wallet.publicKey,
-            systemProgram: SystemProgram.programId,
-            tokenProgram: TOKEN_PROGRAM_ID,
-          }).instruction(),
-        ],
-      ),
+      tx,
     }
   }
 
   /**
    * Returns a TX to create a reward account
    */
-   async createRewardAccount({
-    rewardToken,
-    rewardOwner = this.provider.wallet.publicKey,
-  }: {
-    rewardToken: PublicKey,
-    rewardOwner?: PublicKey,
-  }): Promise<PendingReward> {
+   async createRewardAccount(
+      rewardToken: PublicKey,
+      rewardOwner: PublicKey = this.provider.wallet.publicKey
+    ): Promise<PendingReward> {
     const [reward] = await findRewardAddress(rewardToken, rewardOwner)
 
     return {

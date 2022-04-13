@@ -41,7 +41,6 @@ export class IncentiveWrapper {
       mint: rewardToken,
       owner: staker,
     })
-    console.log('vault', vault.toString())
     if (createVaultIx) {
       tx.append(createVaultIx)
     }

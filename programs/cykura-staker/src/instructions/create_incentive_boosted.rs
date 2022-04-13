@@ -67,9 +67,6 @@ impl<'info> CreateIncentiveBoosted<'info> {
         incentive.refundee = self.refundee.key();
         incentive.start_time = start_time;
         incentive.end_time = end_time;
-        incentive.total_reward_unclaimed = 0;
-        incentive.total_seconds_claimed_x32 = 0;
-        incentive.number_of_stakes = 0;
         incentive.boost_locker = Some(self.locker.key());
 
         emit!(IncentiveCreatedEvent {

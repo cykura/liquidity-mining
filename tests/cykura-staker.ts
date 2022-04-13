@@ -71,9 +71,6 @@ describe('cykura-staker', () => {
       locker,
       refundee: owner,
     })
-    // console.log('sending tx')
-    // console.log('signer', owner.toString())
-    // await createIncentiveTx.send()
     await expectTX(createIncentiveTx, "create incentive").to.be.fulfilled;
 
     const incentiveData = await incentiveWrapper.data()

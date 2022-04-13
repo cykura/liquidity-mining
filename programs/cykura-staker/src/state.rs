@@ -38,7 +38,6 @@ pub struct Incentive {
 
 /// Represents a deposited LP.
 #[account]
-#[derive(Default)]
 pub struct Deposit {
     /// The ATA bump.
     pub bump: u8,
@@ -61,7 +60,6 @@ pub struct Deposit {
 
 /// Represents a staked liquidity NFT.
 #[account]
-#[derive(Default)]
 pub struct Stake {
     /// The ATA bump.
     pub bump: u8,

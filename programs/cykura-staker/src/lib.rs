@@ -184,23 +184,23 @@ pub mod cykura_staker {
 /// [cykura_staker] errors.
 #[error_code]
 pub enum ErrorCode {
-    #[msg("Reward must be positive")]
+    #[msg("cykura_staker::add_reward: reward must be positive")]
     RewardMustBePositive,
-    #[msg("Start time must be now or in the future")]
+    #[msg("cykura_staker::create_incentive: start time must be now or in the future")]
     StartTimeMustBeNowOrInTheFuture,
-    #[msg("Start time too far into future")]
+    #[msg("cykura_staker::create_incentive: start time too far into future")]
     StartTimeTooFarIntoFuture,
-    #[msg("Start time must be before end time")]
+    #[msg("cykura_staker::create_incentive: start time must be before end time")]
     StartTimeMustBeBeforeEndTime,
-    #[msg("Incentive duration is too long")]
+    #[msg("cykura_staker::create_incentive: incentive duration is too long")]
     IncentiveDurationIsTooLong,
-    #[msg("Cannot end incentive before end time")]
+    #[msg("cykura_staker::end_incentive: cannot end incentive before end time")]
     CannotEndIncentiveBeforeEndTime,
-    #[msg("No refund available")]
+    #[msg("cykura_staker::end_incentive: no refund available")]
     NoRefundAvailable,
-    #[msg("Cannot end incentive while deposits are staked")]
+    #[msg("cykura_staker::end_incentive: cannot end incentive while deposits are staked")]
     CannotEndIncentiveWhileDepositsAreStaked,
-    #[msg("Not a Cykura NFT")]
+    #[msg("cykura_staker::create_deposit: not a Cykura NFT")]
     NotACykuraNft,
     #[msg("cykura_staker::withdraw_token: cannot withdraw to staker")]
     CannotWithdrawToStaker,
@@ -226,8 +226,4 @@ pub enum ErrorCode {
     OnlyOwnerCanWithdrawTokenBeforeEndTime,
     #[msg("cykura_staker::unstake_token_boosted: only owner can unstake token from a boosted incentive")]
     OnlyOwnerCanUnstakeFromBoostedIncentive,
-    #[msg("cykura_staker::unstake_token: locker key does not match")]
-    LockerKeyDoesNotMatch,
-    #[msg("Only owner can unstake before incentive end time")]
-    NotStaker,
 }

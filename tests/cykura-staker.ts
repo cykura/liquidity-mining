@@ -7,7 +7,7 @@ import { assert, expect } from 'chai'
 import { createMintsAndAirdrop } from "./utils/createMintsAndAirdrop"
 import { setupEscrowAndLockTokens } from "./utils/setupEscrowAndLockTokens"
 import { setupWorkspace } from "./utils/setupWorkspace"
-import { createCyclosPosition } from "./utils/createCyclosPosition"
+import { createCyclosPosition, swapExactInput } from "./utils/createCyclosPosition"
 import { DepositWrapper, IncentiveWrapper, RewardWrapper } from "../src"
 import { StakeWrapper } from "../src/wrappers/stake"
 import { sleep } from "@saberhq/token-utils"
@@ -117,5 +117,9 @@ describe('cykura-staker', () => {
     stakeWrapper = _stakeWrapper
 
     await expectTX(createDepositAndStakeTx, "create deposit and stake").to.be.fulfilled
+  })
+
+  it('perform a swap', async () => {
+    await swapExactInput(provider, ammAccounts.poolState)
   })
 })

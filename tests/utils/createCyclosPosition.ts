@@ -1,23 +1,28 @@
 import * as anchor from '@project-serum/anchor'
 import { web3, BN } from '@project-serum/anchor'
 import { expectTX } from '@saberhq/chai-solana'
-import { SolanaAugmentedProvider, TransactionEnvelope } from "@saberhq/solana-contrib"
+import { PublicKey, SolanaAugmentedProvider, TransactionEnvelope } from "@saberhq/solana-contrib"
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, Token } from '@solana/spl-token'
 import {
   BITMAP_SEED,
   CyclosCore,
+  FACTORY_ADDRESS,
   FeeAmount,
   FEE_SEED,
   IDL,
   OBSERVATION_SEED,
+  Pool,
   POOL_SEED,
   POSITION_SEED,
   TICK_SEED,
   TICK_SPACINGS,
   u16ToSeed,
-  u32ToSeed
+  u32ToSeed,
 } from '@cykura/sdk'
-import { createATAInstruction } from '@saberhq/token-utils'
+import { createATAInstruction, getATAAddress } from '@saberhq/token-utils'
+import { CurrencyAmount, Token as UniToken } from '@cykura/sdk-core'
+import JSBI from 'jsbi'
+import SolanaTickDataProvider from './SolanaTickDataProvider'
 
 export async function createCyclosPosition(
   provider: SolanaAugmentedProvider,
@@ -28,7 +33,7 @@ export async function createCyclosPosition(
   const owner = provider.wallet.publicKey
 
   // pool parameters
-  const initialPriceX32 = new anchor.BN(1).shln(31) // price = 1, tick = 0
+  const initialPriceX32 = new anchor.BN(1).shln(32) // price = 1, tick = 0
   const fee = FeeAmount.HIGH
   const tickLower = -200
   const tickUpper = 200
@@ -190,8 +195,8 @@ export async function createCyclosPosition(
 
   const amount0Desired = new anchor.BN(1_000_000)
   const amount1Desired = new anchor.BN(1_000_000)
-  const amount0Minimum = new anchor.BN(0)
-  const amount1Minimum = new anchor.BN(0)
+  const amount0Minimum = new anchor.BN(100_000)
+  const amount1Minimum = new anchor.BN(100_000)
   const deadline = new BN(Date.now() / 1000 + 10_000)
 
 
@@ -247,7 +252,8 @@ export async function createCyclosPosition(
   )
   await expectTX(createAccountsTx).to.be.fulfilled
 
-  await cyclosCore.rpc.mintTokenizedPosition(amount0Desired,
+  await cyclosCore.rpc.mintTokenizedPosition(
+    amount0Desired,
     amount1Desired,
     amount0Minimum,
     amount1Minimum,
@@ -307,4 +313,140 @@ export async function createCyclosPosition(
     nftMint: nftMintKeypair.publicKey,
     nftAccount: positionNftAccount,
   }
+}
+
+export async function swapExactInput(
+  provider: SolanaAugmentedProvider,
+  poolState: web3.PublicKey,
+) {
+  // no sdk = ngmi
+
+  const cyclosCore = new anchor.Program<CyclosCore>(IDL, new web3.PublicKey('cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8'), anchor.Provider.env())
+  const owner = provider.wallet.publicKey
+
+  const deadline = new BN(Date.now() / 1000 + 10_000)
+
+  const {
+    token0,
+    token1,
+    fee,
+    observationIndex,
+    observationCardinalityNext,
+    sqrtPriceX32,
+    liquidity,
+    tick
+  } = await cyclosCore.account.poolState.fetch(poolState)
+
+  const [factoryState] = await PublicKey.findProgramAddress([], cyclosCore.programId)
+
+  const lastObservationAState = (await PublicKey.findProgramAddress(
+    [
+      OBSERVATION_SEED,
+      token0.toBuffer(),
+      token1.toBuffer(),
+      u32ToSeed(fee),
+      u16ToSeed(observationIndex)
+    ],
+    cyclosCore.programId
+  ))[0]
+
+  const nextObservationAState = (await PublicKey.findProgramAddress(
+    [
+      OBSERVATION_SEED,
+      token0.toBuffer(),
+      token1.toBuffer(),
+      u32ToSeed(fee),
+      u16ToSeed((observationIndex + 1) % observationCardinalityNext)
+    ],
+    cyclosCore.programId
+  ))[0]
+
+  const tickDataProvider = new SolanaTickDataProvider(cyclosCore, {
+    token0,
+    token1,
+    fee,
+  })
+  await tickDataProvider.eagerLoadCache(tick, TICK_SPACINGS[fee])
+
+  const uniToken0 = new UniToken(0, token0, 6)
+  const uniToken1 = new UniToken(0, token1, 6)
+  const uniPoolA = new Pool(
+    uniToken0,
+    uniToken1,
+    fee,
+    JSBI.BigInt(sqrtPriceX32),
+    JSBI.BigInt(liquidity),
+    tick,
+    tickDataProvider
+  )
+
+  const amountIn = new BN(1_000_000)
+  const amountOutMinimum = new BN(0)
+  const [expectedAmountOut, expectedNewPool, swapAccounts] = uniPoolA.getOutputAmount(
+    CurrencyAmount.fromRawAmount(uniToken0, amountIn.toNumber())
+  )
+  console.log('amount in', CurrencyAmount.fromRawAmount(uniToken0, amountIn.toNumber()).toFixed())
+  console.log('expected amount out', expectedAmountOut.toFixed())
+  const minterWallet0 = await getATAAddress({
+    mint: token0,
+    owner: provider.walletKey,
+  })
+  const minterWallet1 = await getATAAddress({
+    mint: token1,
+    owner: provider.walletKey,
+  })
+  const vault0 = await getATAAddress({
+    mint: token0,
+    owner: poolState,
+  })
+  const vault1 = await getATAAddress({
+    mint: token1,
+    owner: poolState,
+  })
+
+  await cyclosCore.rpc.exactInput(
+    deadline,
+    amountIn,
+    amountOutMinimum,
+    Buffer.from([2]),
+    {
+      accounts: {
+        signer: owner,
+        factoryState,
+        inputTokenAccount: minterWallet0,
+        coreProgram: FACTORY_ADDRESS,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      }, remainingAccounts: [{
+        pubkey: poolState,
+        isSigner: false,
+        isWritable: true
+      }, {
+        pubkey: minterWallet1, // outputTokenAccount
+        isSigner: false,
+        isWritable: true
+      }, {
+        pubkey: vault0, // input vault
+        isSigner: false,
+        isWritable: true
+      }, {
+        pubkey: vault1, // output vault
+        isSigner: false,
+        isWritable: true
+      }, {
+        pubkey: lastObservationAState,
+        isSigner: false,
+        isWritable: true
+      },
+      ...swapAccounts,
+      {
+        pubkey: nextObservationAState,
+        isSigner: false,
+        isWritable: true
+      },
+      ]
+    }
+  )
+
+  const poolStateDataAfter = await cyclosCore.account.poolState.fetch(poolState)
+  console.log('pool price after', poolStateDataAfter)
 }

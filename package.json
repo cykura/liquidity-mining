@@ -15,7 +15,7 @@
         "@saberhq/token-utils": "^1.12.44",
         "@solana/spl-token": "^0.1.8",
         "@tribecahq/tribeca-sdk": "^0.4.0",
-        "jsbi": "^4.1.0",
+        "jsbi": "4.1.0",
         "tiny-invariant": "^1.2.0"
     },
     "devDependencies": {

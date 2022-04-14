@@ -63,7 +63,7 @@ import { findGovernorAddress, findLockerAddress, findEscrowAddress, TribecaSDK, 
 
     // create escrow and lock tokens
     const lockTokensTx = await lockerWrapper.lockTokens({
-      amount: new BN(1_000_000),
+      amount: new BN(10_000),
       duration: new BN(1_000_000),
     })
     await expectTX(lockTokensTx).to.be.fulfilled

@@ -17,6 +17,7 @@ import {
   u16ToSeed,
   u32ToSeed
 } from '@cykura/sdk'
+import { createATAInstruction } from '@saberhq/token-utils'
 
 export async function createCyclosPosition(
   provider: SolanaAugmentedProvider,
@@ -182,12 +183,8 @@ export async function createCyclosPosition(
       feeState,
       poolState,
       initialObservationState,
-      vault0,
-      vault1,
       systemProgram: web3.SystemProgram.programId,
       rent: web3.SYSVAR_RENT_PUBKEY,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
     }
   })
 
@@ -285,6 +282,20 @@ export async function createCyclosPosition(
       isWritable: true
     }],
     signers: [nftMintKeypair],
+    instructions: [
+      createATAInstruction({
+        address: vault0,
+        mint: token0,
+        owner: poolState,
+        payer: provider.walletKey
+      }),
+      createATAInstruction({
+        address: vault1,
+        mint: token1,
+        owner: poolState,
+        payer: provider.walletKey
+      })
+    ]
   })
 
   return {

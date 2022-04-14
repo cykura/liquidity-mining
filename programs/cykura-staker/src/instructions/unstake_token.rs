@@ -2,8 +2,8 @@ use crate::reward_math::RewardOwed;
 use crate::ErrorCode;
 use crate::*;
 use anchor_lang::AccountsClose;
-use cyclos_core::states::oracle::ObservationState;
-use cyclos_core::states::pool::{SnapshotCumulative, POOL_SEED};
+use cyclos_core::states::oracle::{ObservationState, OBSERVATION_SEED};
+use cyclos_core::states::pool::SnapshotCumulative;
 use cyclos_core::states::tick::TickState;
 use cyclos_core::states::tick::TICK_SEED;
 use std::ops::Deref;
@@ -40,40 +40,40 @@ pub struct UnstakeToken<'info> {
 
     /// The lower tick account of the position.
     #[account(
-        seeds = [
+        address = Pubkey::create_program_address(&[
             TICK_SEED.as_bytes(),
             pool.load()?.token_0.as_ref(),
             pool.load()?.token_1.as_ref(),
             &pool.load()?.fee.to_be_bytes(),
-            &deposit.tick_lower.to_be_bytes()
-        ],
-        bump = tick_lower.load()?.bump,
+            &deposit.tick_lower.to_be_bytes(),
+            &[tick_lower.load()?.bump]
+        ], &cyclos_core::ID).unwrap()
     )]
     pub tick_lower: AccountLoader<'info, TickState>,
 
     /// The upper tick account of the position.
     #[account(
-        seeds = [
+        address = Pubkey::create_program_address(&[
             TICK_SEED.as_bytes(),
             pool.load()?.token_0.as_ref(),
             pool.load()?.token_1.as_ref(),
             &pool.load()?.fee.to_be_bytes(),
-            &deposit.tick_upper.to_be_bytes()
-        ],
-        bump = tick_upper.load()?.bump,
+            &deposit.tick_upper.to_be_bytes(),
+            &[tick_upper.load()?.bump]
+        ], &cyclos_core::ID).unwrap()
     )]
     pub tick_upper: AccountLoader<'info, TickState>,
 
     /// The latest oracle observation for the pool.
     #[account(
-        seeds = [
-            POOL_SEED.as_bytes(),
+        address = Pubkey::create_program_address(&[
+            &OBSERVATION_SEED.as_bytes(),
             pool.load()?.token_0.as_ref(),
             pool.load()?.token_1.as_ref(),
-            &pool.load()?.fee.to_be_bytes()
-        ],
-        bump = latest_observation.load()?.bump,
-        constraint = latest_observation.load()?.index == pool.load()?.observation_index @ErrorCode::NotLatestObservation,
+            &pool.load()?.fee.to_be_bytes(),
+            &pool.load()?.observation_index.to_be_bytes(),
+            &[latest_observation.load()?.bump]
+        ], &cyclos_core::ID).unwrap() @ErrorCode::NotLatestObservation,
     )]
     pub latest_observation: AccountLoader<'info, ObservationState>,
 

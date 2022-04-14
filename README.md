@@ -21,8 +21,8 @@ min((vliquidity∗40/100)+(Totalvliquidity∗VotingPower/VotingTotal∗(100−40
     - [`createIncentive()`](./src/sdk.ts#L52) or [`createIncentiveBoosted()`](./src/sdk.ts#L98). Any valid Tribeca locker can be used for boosting. In our case, provide the address for Cykura's official locker.
 
 2. Stake token:
-    - Deposit the LP NFT using [`createDeposit()`](./src/sdk.ts#L147)
-    - Stake the deposit in an incentive by calling [`stakeToken()`](./src/sdk.ts#L209)
+    - Deposit the LP NFT using [`createDeposit()`](./src/sdk.ts#L147), then stake the deposit in an incentive by calling [`stakeToken()`](./src/sdk.ts#L209).
+    - Shortcut: use [`depositAndStake()`](./src/sdk.ts#L249) to call both functions in a single TX
     - Note: Dual liquidity mining rewards need two stake instructions.
 
 3. Collecting fees and withdrawing

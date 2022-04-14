@@ -43,7 +43,10 @@ impl<'info> AddReward<'info> {
         let incentive = &mut self.incentive;
         incentive.total_reward_unclaimed += reward;
 
-        msg!("total reward unclaimed {}", incentive.total_reward_unclaimed);
+        msg!(
+            "total reward unclaimed {}",
+            incentive.total_reward_unclaimed
+        );
 
         token::transfer(
             CpiContext::new(

@@ -10,6 +10,7 @@ import { setupWorkspace } from "./utils/setupWorkspace"
 import { createCyclosPosition } from "./utils/createCyclosPosition"
 import { DepositWrapper, IncentiveWrapper, RewardWrapper } from "../src"
 import { StakeWrapper } from "../src/wrappers/stake"
+import { sleep } from "@saberhq/token-utils"
 
 chai.use(chaiSolana)
 
@@ -68,7 +69,7 @@ describe('cykura-staker', () => {
     const slot = await provider.connection.getSlot()
     const blockTime = await provider.connection.getBlockTime(slot)
 
-    startTime = new BN(blockTime + 10)
+    startTime = new BN(blockTime + 2)
     endTime = new BN(blockTime + 20)
 
     const { wrapper: _incentiveWrapper, tx: createIncentiveTx } = await cykuraStakerSdk.createIncentiveBoosted({
@@ -100,11 +101,21 @@ describe('cykura-staker', () => {
     assert(incentiveData.totalRewardUnclaimed.eq(rewardAmount))
   })
 
-  it('deposit NFT in staker', async () => {
-    const { deposit: _depositWrapper, tx: createDepositTx } = await cykuraStakerSdk.createDeposit(ammAccounts.nftAccount)
-    depositWrapper = _depositWrapper
-    await createDepositTx.send()
+  it('deposit and stake NFT', async () => {
+    await sleep(2000) // wait till incentive starts
 
-    const depositData = await depositWrapper.data()
+    // deposit and stake in a single TX. To do them separately, you can use `createDeposit()` and `stakeToken()`
+    const {
+      deposit: _depositWrapper,
+      stake: _stakeWrapper,
+      tx: createDepositAndStakeTx
+    } = await cykuraStakerSdk.depositAndStake(
+      ammAccounts.nftAccount,
+      incentiveWrapper.incentiveKey
+    )
+    depositWrapper = _depositWrapper
+    stakeWrapper = _stakeWrapper
+
+    await expectTX(createDepositAndStakeTx, "create deposit and stake").to.be.fulfilled
   })
 })

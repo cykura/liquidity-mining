@@ -1,4 +1,4 @@
-import type { TransactionEnvelope } from "@saberhq/solana-contrib";
+import type { PublicKey, TransactionEnvelope } from "@saberhq/solana-contrib";
 import { DepositWrapper } from "./deposit";
 
 import type { IncentiveWrapper } from "./incentive";
@@ -13,6 +13,7 @@ export type PendingIncentive = {
 export type PendingDeposit = {
   deposit: DepositWrapper;
   tx: TransactionEnvelope;
+  mint: PublicKey;
 };
 
 export type PendingReward = {
@@ -25,3 +26,8 @@ export type PendingStake = {
   tx: TransactionEnvelope;
 };
 
+export type PendingDepositAndStake = {
+  deposit: DepositWrapper;
+  stake: StakeWrapper;
+  tx: TransactionEnvelope;
+};

@@ -1,3 +1,4 @@
+import * as anchor from "@project-serum/anchor";
 import type { BN } from "@project-serum/anchor";
 import { newProgramMap } from "@saberhq/anchor-contrib";
 import type { AugmentedProvider, Provider } from "@saberhq/solana-contrib";
@@ -157,7 +158,6 @@ export class CykuraStakerSDK {
     if (createVaultIx) {
       tx.append(createVaultIx)
     }
-    console.log('mint', mint.toString(), 'deposit vault', depositVault.toString())
 
     const [tokenizedPosition] = await PublicKey.findProgramAddress([
       POSITION_SEED,
@@ -177,53 +177,27 @@ export class CykuraStakerSDK {
     return {
       deposit: new DepositWrapper(this, deposit),
       tx,
+      mint,
     }
   }
 
   /**
-   * Returns a TX to create a reward account
+   * Returns a TX to stake an LP token
+   * @param mint Mint address of the LP token
+   * @param incentive Incentive address
+   * @returns
    */
-   async createRewardAccount(
-      rewardToken: PublicKey,
-      rewardOwner: PublicKey = this.provider.wallet.publicKey
-    ): Promise<PendingReward> {
-    const [reward] = await findRewardAddress(rewardToken, rewardOwner)
-
-    return {
-      reward: new RewardWrapper(this, reward),
-      tx: new TransactionEnvelope(
-        this.provider,
-        [
-          await this.programs.CykuraStaker.methods.createRewardAccount().accounts({
-            reward,
-            rewardToken,
-            rewardOwner,
-            payer: this.provider.wallet.publicKey,
-            systemProgram: SystemProgram.programId,
-          }).instruction(),
-        ],
-      ),
-    }
-  }
-
-  async stakeToken({
-    deposit,
-    incentive
-  }: {
-    deposit: DepositWrapper,
-    incentive: IncentiveWrapper,
-  }): Promise<PendingStake> {
-    const { mint } = await deposit.data()
+  async stakeToken(mint: PublicKey, incentive: PublicKey): Promise<PendingStake> {
+    const [deposit] = await findDepositAddress(mint)
     const [tokenizedPosition] = await PublicKey.findProgramAddress([
       POSITION_SEED,
       mint.toBuffer()
     ], FACTORY_ADDRESS)
-    const [stake] = await findStakeAddress(mint, incentive.incentiveKey)
+    const [stake] = await findStakeAddress(mint, incentive)
 
-    // @ts-ignore
-    const cyclosCore = new anchor.Program<CyclosCore>(CYCLOS_CORE_IDL, FACTORY_ADDRESS, this.provider.provider)
+    const cyclosCore = new anchor.Program<CyclosCore>(CYCLOS_CORE_IDL, FACTORY_ADDRESS, anchor.Provider.env())
     const { poolId, tickLower, tickUpper } = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPosition)
-    const { token0, token1, fee, observationIndex } = await cyclosCore.account.tokenizedPositionState.fetch(poolId)
+    const { token0, token1, fee, observationIndex } = await cyclosCore.account.poolState.fetch(poolId)
 
     const [tickLowerState] = await PublicKey.findProgramAddress([
       TICK_SEED,
@@ -257,8 +231,8 @@ export class CykuraStakerSDK {
         [
           await this.programs.CykuraStaker.methods.stakeToken().accounts({
             stake,
-            incentive: incentive.incentiveKey,
-            deposit: deposit.depositKey,
+            incentive: incentive,
+            deposit,
             tokenizedPosition,
             pool: poolId,
             tickLower: tickLowerState,
@@ -271,4 +245,45 @@ export class CykuraStakerSDK {
       ),
     }
   }
+
+  async depositAndStake(
+    depositorTokenAccount: PublicKey,
+    incentive: PublicKey
+  ) {
+    const { deposit, tx: createDepositTx, mint } = await this.createDeposit(depositorTokenAccount)
+    const { stake, tx: stakeTokenTx } = await this.stakeToken(mint, incentive)
+
+    const tx = new TransactionEnvelope(this.provider, [
+      ...createDepositTx.instructions,
+      ...stakeTokenTx.instructions,
+    ])
+
+    return { deposit, stake, tx }
+  }
+
+  /**
+   * Returns a TX to create a reward account
+   */
+   async createRewardAccount(
+    rewardToken: PublicKey,
+    rewardOwner: PublicKey = this.provider.wallet.publicKey
+  ): Promise<PendingReward> {
+  const [reward] = await findRewardAddress(rewardToken, rewardOwner)
+
+  return {
+    reward: new RewardWrapper(this, reward),
+    tx: new TransactionEnvelope(
+      this.provider,
+      [
+        await this.programs.CykuraStaker.methods.createRewardAccount().accounts({
+          reward,
+          rewardToken,
+          rewardOwner,
+          payer: this.provider.wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        }).instruction(),
+      ],
+    ),
+  }
+}
 }

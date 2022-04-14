@@ -96,10 +96,8 @@ mod test {
     #[test]
     fn check_address() {
         let mint = Pubkey::from_str("E1qETt1HWw7DcoqdyF52FwB3QQxj4cKjbaabjhYJKRMG").unwrap();
-        let address = get_associated_token_address(
-            &Pubkey::find_program_address(&[], &crate::id()).0,
-            &mint
-        );
+        let address =
+            get_associated_token_address(&Pubkey::find_program_address(&[], &crate::id()).0, &mint);
         print!("{:?}", address);
     }
 }

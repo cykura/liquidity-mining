@@ -28,6 +28,7 @@ pub struct StakeToken<'info> {
     pub stake: Account<'info, Stake>,
 
     /// The [Incentive] for which to stake the NFT.
+    #[account(mut)]
     pub incentive: Account<'info, Incentive>,
 
     /// [Deposit] to be staked.

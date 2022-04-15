@@ -68,14 +68,11 @@ export class IncentiveWrapper {
   /**
    * Returns a transaction to end the incentive, transferring leftover balance to the refundee
    *
-   * If `refundeeTokenAccount` is not provided, the refundee's ATA is used. A create ATA instruction
-   * is appended if the default ATA does not exist.
+   * @param refundeeTokenAccount The token account receiving the refund. If `refundeeTokenAccount`
+   * is not provided, the refundee's ATA is used. A create ATA instruction is appended if the
+   * default ATA does not exist.
    */
-  async endIncentive({
-    refundeeTokenAccount
-  }: {
-    refundeeTokenAccount?: PublicKey
-  }) {
+  async endIncentive(refundeeTokenAccount?: PublicKey): Promise<TransactionEnvelope> {
     const [staker] = await findStakerAddress()
     const { rewardToken, refundee } = await this.data()
     const vault = await getATAAddress({
@@ -111,6 +108,6 @@ export class IncentiveWrapper {
       }).instruction()
     )
 
-    return { tx }
+    return tx
   }
 }

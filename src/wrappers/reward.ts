@@ -27,7 +27,6 @@ export class RewardWrapper {
   async data(): Promise<RewardData> {
     if (!this._reward) {
       this._reward = await this.reload();
-      console.log('got reward data', this._reward)
     }
     return this._reward;
   }

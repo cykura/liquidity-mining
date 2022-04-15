@@ -385,8 +385,6 @@ export async function swapExactInput(
   const [expectedAmountOut, expectedNewPool, swapAccounts] = uniPoolA.getOutputAmount(
     CurrencyAmount.fromRawAmount(uniToken0, amountIn.toNumber())
   )
-  console.log('amount in', CurrencyAmount.fromRawAmount(uniToken0, amountIn.toNumber()).toFixed())
-  console.log('expected amount out', expectedAmountOut.toFixed())
   const minterWallet0 = await getATAAddress({
     mint: token0,
     owner: provider.walletKey,

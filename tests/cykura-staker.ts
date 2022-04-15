@@ -1,14 +1,13 @@
 import * as chai from "chai"
-import * as anchor from '@project-serum/anchor'
 import { Program, web3, BN } from '@project-serum/anchor'
-import { PublicKey, TransactionEnvelope } from '@saberhq/solana-contrib'
+import { PublicKey } from '@saberhq/solana-contrib'
 import { chaiSolana, expectTX } from '@saberhq/chai-solana'
-import { assert, expect } from 'chai'
+import { assert } from 'chai'
 import { createMintsAndAirdrop } from "./utils/createMintsAndAirdrop"
 import { setupEscrowAndLockTokens } from "./utils/setupEscrowAndLockTokens"
 import { setupWorkspace } from "./utils/setupWorkspace"
 import { createCyclosPosition, swapExactInput } from "./utils/createCyclosPosition"
-import { DepositWrapper, IncentiveWrapper, RewardWrapper } from "../src"
+import { computeRewardAmount, DepositWrapper, IncentiveWrapper, RewardWrapper } from "../src"
 import { StakeWrapper } from "../src/wrappers/stake"
 import { sleep } from "@saberhq/token-utils"
 
@@ -70,7 +69,7 @@ describe('cykura-staker', () => {
     const blockTime = await provider.connection.getBlockTime(slot)
 
     startTime = new BN(blockTime + 2)
-    endTime = new BN(blockTime + 20)
+    endTime = new BN(blockTime + 10)
 
     const { wrapper: _incentiveWrapper, tx: createIncentiveTx } = await cykuraStakerSdk.createIncentiveBoosted({
       rewardToken: token0,
@@ -91,6 +90,7 @@ describe('cykura-staker', () => {
     assert(incentiveData.startTime.eq(startTime))
     assert(incentiveData.endTime.eq(endTime))
     assert(incentiveData.boostLocker.equals(locker))
+    assert.equal(incentiveData.numberOfStakes, 0)
   })
 
   it('add reward in the incentive', async () => {
@@ -117,19 +117,27 @@ describe('cykura-staker', () => {
     stakeWrapper = _stakeWrapper
 
     await expectTX(createDepositAndStakeTx, "create deposit and stake").to.be.fulfilled
+
+    const incentiveData = await incentiveWrapper.reload()
   })
 
-  it('perform a swap and read accumulated reward', async () => {
+  it('perform a swap to earn liquidity mining reward', async () => {
     await swapExactInput(provider, ammAccounts.poolState)
-
-    const rewardInfo = await stakeWrapper.getRewardInfo()
-    console.log('reward', rewardInfo.reward.toNumber(), 'seconds inside x32', rewardInfo.secondsInsideX32.toString())
   })
 
   it('unstake and collect reward', async () => {
+    // read accumulated reward
+    const rewardInfo = await stakeWrapper.getRewardInfo()
+    console.log('reward', rewardInfo.reward.toNumber(), 'seconds inside x32', rewardInfo.secondsInsideX32.toString())
+
     // create a reward account and unstake
     const { reward: _rewardWrapper, tx: unstakeTx } = await stakeWrapper.unstakeToken(depositWrapper)
     rewardWrapper = _rewardWrapper
+
+    await expectTX(unstakeTx, "unstake LP NFT").to.be.fulfilled
+    const { rewardsOwed } =  await rewardWrapper.data()
+    console.log('reward owed', rewardsOwed.toString())
+    assert(rewardsOwed.eq(rewardInfo.reward))
 
     // transfer out reward from reward account to the user
     const u64Max = new BN(1).shln(63) // pass u64::MAX to completely transfer entire pending reward
@@ -145,5 +153,12 @@ describe('cykura-staker', () => {
   it('withdraw token and exit from farm', async () => {
     const withdrawTokenTx = await depositWrapper.withdrawToken()
     await expectTX(withdrawTokenTx, "withdraw token").to.be.fulfilled
+  })
+
+  it('end the incentive and reclaim leftover reward', async () => {
+    console.log('waiting for incentive to end')
+    await sleep(11000)
+    const endIncentiveTx = await incentiveWrapper.endIncentive()
+    await expectTX(endIncentiveTx, "end incentive").to.be.fulfilled
   })
 })

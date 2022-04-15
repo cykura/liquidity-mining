@@ -137,5 +137,13 @@ describe('cykura-staker', () => {
     unstakeTx.combine(claimRewardTx)
 
     await expectTX(unstakeTx, "unstake and collect reward").to.be.fulfilled
+
+    // call withdrawToken if you wish to remove the user from the farm
+    // If you wish to harvest the rewards and continue farming, call stakeToken() again.
+  })
+
+  it('withdraw token and exit from farm', async () => {
+    const withdrawTokenTx = await depositWrapper.withdrawToken()
+    await expectTX(withdrawTokenTx, "withdraw token").to.be.fulfilled
   })
 })

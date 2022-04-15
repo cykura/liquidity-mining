@@ -14,7 +14,7 @@ pub struct CreateRewardAccount<'info> {
         ],
         bump,
         payer = payer,
-        space = size_of::<Reward>()
+        space = 8 + size_of::<Reward>()
     )]
     pub reward: Account<'info, Reward>,
 
@@ -38,7 +38,6 @@ impl<'info> CreateRewardAccount<'info> {
     /// Creates an empty [Reward] account for a given token and address.
     pub fn create_reward_account(&mut self, bump: u8) -> Result<()> {
         let reward = &mut self.reward;
-
         reward.bump = bump;
         reward.reward_token = self.reward_token.key();
         reward.owner = self.reward_owner.key();

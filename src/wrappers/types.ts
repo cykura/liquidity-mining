@@ -26,6 +26,11 @@ export type PendingStake = {
   tx: TransactionEnvelope;
 };
 
+export type PendingUnstake = {
+  reward: RewardWrapper;
+  tx: TransactionEnvelope;
+};
+
 export type PendingDepositAndStake = {
   deposit: DepositWrapper;
   stake: StakeWrapper;

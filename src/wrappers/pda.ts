@@ -62,7 +62,7 @@ export const findRewardAddress = async (
 ): Promise<[PublicKey, number]> => {
   return PublicKey.findProgramAddress(
     [
-      utils.bytes.utf8.encode("Deposit"),
+      utils.bytes.utf8.encode("Reward"),
       rewardToken.toBuffer(),
       owner.toBuffer(),
     ],

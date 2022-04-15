@@ -1,4 +1,5 @@
-import { CyclosCore,
+import {
+  CyclosCore,
   IDL as CYCLOS_CORE_IDL,
   FACTORY_ADDRESS,
   POSITION_SEED,
@@ -23,6 +24,8 @@ import { CykuraStakerSDK } from "../sdk";
 import { DepositWrapper } from "./deposit";
 import { IncentiveWrapper } from "./incentive";
 import { findDepositAddress, findRewardAddress } from "./pda";
+import { RewardWrapper } from "./reward";
+import { PendingUnstake } from "./types";
 
 export class StakeWrapper {
   private _stake: StakeData | null = null;
@@ -48,83 +51,39 @@ export class StakeWrapper {
     return this._stake;
   }
 
-  async unstakeToken(deposit: DepositWrapper): Promise<TransactionEnvelope> {
-    const { mint: rewardToken, incentive } = await this.data()
-    const [reward] = await findRewardAddress(rewardToken, this.provider.wallet.publicKey)
-    const { mint } = await deposit.data()
+  /**
+   * Returns a TX to unstake from an incentive, boosted or otherwise. The reward account is created
+   * if it does not already exist.
+   *
+   * @param deposit
+   * @returns
+   */
+  async unstakeToken(deposit: DepositWrapper): Promise<PendingUnstake> {
+    const tx = new TransactionEnvelope(this.provider, [])
 
-    // @ts-ignore
-    const cyclosCore = new anchor.Program<CyclosCore>(CYCLOS_CORE_IDL, FACTORY_ADDRESS, this.provider.provider)
-    const [tokenizedPosition] = await PublicKey.findProgramAddress([
-      POSITION_SEED,
-      mint.toBuffer()
-    ], FACTORY_ADDRESS)
-
-    const { poolId, tickLower, tickUpper } = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPosition)
-    const { token0, token1, fee, observationIndex } = await cyclosCore.account.tokenizedPositionState.fetch(poolId)
-
-    const [tickLowerState] = await PublicKey.findProgramAddress([
-      TICK_SEED,
-      token0.toBuffer(),
-      token1.toBuffer(),
-      u32ToSeed(fee),
-      u32ToSeed(tickLower)
-    ], FACTORY_ADDRESS)
-
-    const [tickUpperState] = await PublicKey.findProgramAddress([
-      TICK_SEED,
-      token0.toBuffer(),
-      token1.toBuffer(),
-      u32ToSeed(fee),
-      u32ToSeed(tickUpper)
-    ], FACTORY_ADDRESS)
-
-    const [latestObservation] = await PublicKey.findProgramAddress(
-      [
-        OBSERVATION_SEED,
-        token0.toBuffer(),
-        token1.toBuffer(),
-        u32ToSeed(fee),
-        u16ToSeed(observationIndex)
-      ], FACTORY_ADDRESS)
-
-    return new TransactionEnvelope(
-      this.provider,
-      [
-        await this.sdk.programs.CykuraStaker.methods.unstakeToken().accounts({
-          stake: this.stakeKey,
-          incentive,
-          deposit: deposit.depositKey,
-          reward,
-          pool: poolId,
-          tickLower: tickLowerState,
-          tickUpper: tickUpperState,
-          latestObservation,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }).instruction()
-      ],
-    )
-  }
-
-  async unstakeTokenBoosted(deposit: DepositWrapper): Promise<TransactionEnvelope> {
-    const { mint: rewardToken, incentive } = await this.data()
-    const [reward] = await findRewardAddress(rewardToken, this.provider.wallet.publicKey)
-    const { mint, owner } = await deposit.data()
-
+    const { mint: nftMint, incentive } = await this.data()
     const incentiveWrapper = new IncentiveWrapper(this.sdk, incentive)
-    const { boostLocker } = await incentiveWrapper.data()
+    const { boostLocker, rewardToken: incentiveRewardToken } = await incentiveWrapper.data()
 
-    const [escrow] = await findEscrowAddress(boostLocker, owner)
+    const [reward] = await findRewardAddress(incentiveRewardToken, this.provider.wallet.publicKey)
+    const rewardData = await this.provider.getAccountInfo(reward)
+    if (!rewardData) {
+      const { tx: createRewardAccountTx } = await this.sdk.createRewardAccount(
+        incentiveRewardToken,
+        this.provider.wallet.publicKey
+      )
+      tx.append(...createRewardAccountTx.instructions)
+    }
 
     // @ts-ignore
     const cyclosCore = new anchor.Program<CyclosCore>(CYCLOS_CORE_IDL, FACTORY_ADDRESS, this.provider.provider)
     const [tokenizedPosition] = await PublicKey.findProgramAddress([
       POSITION_SEED,
-      mint.toBuffer()
+      nftMint.toBuffer()
     ], FACTORY_ADDRESS)
 
     const { poolId, tickLower, tickUpper } = await cyclosCore.account.tokenizedPositionState.fetch(tokenizedPosition)
-    const { token0, token1, fee, observationIndex } = await cyclosCore.account.tokenizedPositionState.fetch(poolId)
+    const { token0, token1, fee, observationIndex } = await cyclosCore.account.poolState.fetch(poolId)
 
     const [tickLowerState] = await PublicKey.findProgramAddress([
       TICK_SEED,
@@ -151,24 +110,41 @@ export class StakeWrapper {
         u16ToSeed(observationIndex)
       ], FACTORY_ADDRESS)
 
-    return new TransactionEnvelope(
-      this.provider,
-      [
-        await this.sdk.programs.CykuraStaker.methods.unstakeTokenBoosted().accounts({
-          stake: this.stakeKey,
-          incentive,
-          locker: boostLocker,
-          escrow,
-          deposit: deposit.depositKey,
-          reward,
-          pool: poolId,
-          tickLower: tickLowerState,
-          tickUpper: tickUpperState,
-          latestObservation,
-          signer: owner,
-        }).instruction()
-      ],
-    )
+    if (incentive) {
+      const [escrow] = await findEscrowAddress(boostLocker, this.provider.walletKey)
+
+      tx.append(await this.sdk.programs.CykuraStaker.methods.unstakeTokenBoosted().accounts({
+        stake: this.stakeKey,
+        incentive,
+        locker: boostLocker,
+        escrow,
+        deposit: deposit.depositKey,
+        reward,
+        pool: poolId,
+        tickLower: tickLowerState,
+        tickUpper: tickUpperState,
+        latestObservation,
+        signer: this.provider.walletKey,
+      }).instruction())
+
+    } else {
+      tx.append(await this.sdk.programs.CykuraStaker.methods.unstakeToken().accounts({
+        stake: this.stakeKey,
+        incentive,
+        deposit: deposit.depositKey,
+        reward,
+        pool: poolId,
+        tickLower: tickLowerState,
+        tickUpper: tickUpperState,
+        latestObservation,
+        tokenProgram: TOKEN_PROGRAM_ID
+      }).instruction())
+    }
+
+    return {
+      tx,
+      reward: new RewardWrapper(this.sdk, reward),
+    }
   }
 
   /**

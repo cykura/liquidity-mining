@@ -126,7 +126,16 @@ describe('cykura-staker', () => {
     console.log('reward', rewardInfo.reward.toNumber(), 'seconds inside x32', rewardInfo.secondsInsideX32.toString())
   })
 
-  // it('unstake and collect reward', async () => {
-  //   // const gg = await stakeWrapper.unstakeToken()
-  // })
+  it('unstake and collect reward', async () => {
+    // create a reward account and unstake
+    const { reward: _rewardWrapper, tx: unstakeTx } = await stakeWrapper.unstakeToken(depositWrapper)
+    rewardWrapper = _rewardWrapper
+
+    // transfer out reward from reward account to the user
+    const u64Max = new BN(1).shln(63) // pass u64::MAX to completely transfer entire pending reward
+    const claimRewardTx = await rewardWrapper.claimReward(u64Max, token0)
+    unstakeTx.combine(claimRewardTx)
+
+    await expectTX(unstakeTx, "unstake and collect reward").to.be.fulfilled
+  })
 })

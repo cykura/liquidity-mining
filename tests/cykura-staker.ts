@@ -119,7 +119,14 @@ describe('cykura-staker', () => {
     await expectTX(createDepositAndStakeTx, "create deposit and stake").to.be.fulfilled
   })
 
-  it('perform a swap', async () => {
+  it('perform a swap and read accumulated reward', async () => {
     await swapExactInput(provider, ammAccounts.poolState)
+
+    const rewardInfo = await stakeWrapper.getRewardInfo()
+    console.log('reward', rewardInfo.reward.toNumber(), 'seconds inside x32', rewardInfo.secondsInsideX32.toString())
   })
+
+  // it('unstake and collect reward', async () => {
+  //   // const gg = await stakeWrapper.unstakeToken()
+  // })
 })

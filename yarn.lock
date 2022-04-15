@@ -21,10 +21,10 @@
     tiny-invariant "^1.1.0"
     toformat "^2.0.0"
 
-"@cykura/sdk@^0.1.24":
-  version "0.1.24"
-  resolved "https://registry.yarnpkg.com/@cykura/sdk/-/sdk-0.1.24.tgz#edc6b653d5a980e8a378e2df3409bd5da0118d15"
-  integrity sha512-4nSARQFATv6e1m9V/ksryTTQClb0QN2KV1CgV3ciBhB6D3ZOWdb2SHjZQ2HHx5PDFdviTijdBWXm/EDm119diw==
+"@cykura/sdk@^0.1.26":
+  version "0.1.26"
+  resolved "https://registry.yarnpkg.com/@cykura/sdk/-/sdk-0.1.26.tgz#9179336c44c0cc3d0f1405018ea02c372ecbec20"
+  integrity sha512-e0RK8V2ga9p91u2SBWyKbv/ZuCwCJOqDg97DE8ahD27lhSwjGOXKtVUiQ5E02IYcCrwUOI5XuaAxf7H7tkQhaw==
   dependencies:
     "@cykura/sdk-core" "^0.1.7"
     "@project-serum/anchor" "^0.22.1"

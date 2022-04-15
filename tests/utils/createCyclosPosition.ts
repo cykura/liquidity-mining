@@ -446,7 +446,4 @@ export async function swapExactInput(
       ]
     }
   )
-
-  const poolStateDataAfter = await cyclosCore.account.poolState.fetch(poolState)
-  console.log('pool price after', poolStateDataAfter)
 }

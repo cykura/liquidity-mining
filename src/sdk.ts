@@ -183,6 +183,8 @@ export class CykuraStakerSDK {
 
   /**
    * Returns a TX to stake an LP token
+   * TODO use token account instead of mint
+   *
    * @param mint Mint address of the LP token
    * @param incentive Incentive address
    * @returns

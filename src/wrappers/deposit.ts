@@ -21,7 +21,7 @@ export class DepositWrapper {
   }
 
   async reload(): Promise<DepositData> {
-    return await this.program.account.deposit.fetch(this.depositKey);
+    return this.program.account.deposit.fetch(this.depositKey);
   }
 
   async data(): Promise<DepositData> {

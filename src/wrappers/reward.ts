@@ -20,12 +20,13 @@ export class RewardWrapper {
   }
 
   async reload(): Promise<RewardData> {
-    return await this.program.account.reward.fetch(this.rewardKey);
+    return this.program.account.reward.fetch(this.rewardKey);
   }
 
   async data(): Promise<RewardData> {
     if (!this._reward) {
       this._reward = await this.reload();
+      console.log('got reward data', this._reward)
     }
     return this._reward;
   }

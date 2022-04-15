@@ -1,7 +1,6 @@
 use crate::*;
 use anchor_spl::associated_token::get_associated_token_address;
 use anchor_spl::token;
-use cykura_staker;
 
 /// Accounts for [cykura_staker::add_reward].
 #[derive(Accounts)]
@@ -42,11 +41,6 @@ impl<'info> AddReward<'info> {
     pub fn add_reward(&mut self, reward: u64) -> Result<()> {
         let incentive = &mut self.incentive;
         incentive.total_reward_unclaimed += reward;
-
-        msg!(
-            "total reward unclaimed {}",
-            incentive.total_reward_unclaimed
-        );
 
         token::transfer(
             CpiContext::new(

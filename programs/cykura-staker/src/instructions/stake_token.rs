@@ -115,6 +115,8 @@ impl<'info> StakeToken<'info> {
 
         let stake = &mut self.stake;
         stake.bump = bump;
+        stake.mint = self.deposit.mint;
+        stake.incentive = self.incentive.key();
         stake.seconds_per_liquidity_inside_initial_x32 = seconds_per_liquidity_inside_x32;
         stake.liquidity = self.pool.load()?.liquidity;
 

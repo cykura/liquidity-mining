@@ -4,6 +4,7 @@ import invariant from 'tiny-invariant';
 export interface RewardOwed {
   reward: BN,
   secondsInsideX32: BN,
+  boostPercent?: number,
 }
 
 export function computeRewardAmount({
@@ -71,29 +72,29 @@ export function computeRewardAmountBoosted({
   invariant(currentTime.gte(startTime));
 
   const effectiveLiquidity = BN.min(
-    liquidity.muln(0.4)
+    liquidity.muln(4)
       .add(
-        totalPoolLiquidity.mul(votingPower).div(totalVotingPower).muln(0.6)
-      ),
+        totalPoolLiquidity.mul(votingPower).div(totalVotingPower).muln(6)
+      ).divn(10),
     liquidity
   )
   const secondsInsideX32 = secondsPerLiquidityInsideX32
     .sub(secondsPerLiquidityInsideInitialX32)
     .mul(effectiveLiquidity)
 
-  const adjustedCurrentTime = endTime.gt(currentTime) ? endTime : currentTime
-  const totalSecondsUnlaimedX32 = adjustedCurrentTime
+  const totalSecondsUnlaimedX32 = BN.max(endTime, currentTime)
     .sub(startTime)
     .shln(32)
     .sub(totalSecondsClaimedX32)
 
   const reward = totalRewardUnclaimed.mul(secondsInsideX32).div(totalSecondsUnlaimedX32)
 
-  return { reward, secondsInsideX32 }
+  const boostPercent = computeBoostPercent(liquidity, totalPoolLiquidity, votingPower, totalVotingPower)
+  return { reward, secondsInsideX32, boostPercent }
 }
 
 /**
- * Compute boost percent for a user's LP position
+ * Compute boost percent for a user's LP position. Max boost is 250%
  *
  * @param liquidity The liquidity in the LP NFT
  * @param poolLiquidity The total liquidity in the pool
@@ -107,16 +108,15 @@ export function computeBoostPercent(
   votingPower: BN,
   totalVotingPower: BN,
 ): number {
+  const baseLiquidity = liquidity.muln(4).divn(10)
   const effectiveLiquidity = BN.min(
-    liquidity.muln(0.4)
+    baseLiquidity
       .add(
-        poolLiquidity.mul(votingPower).div(totalVotingPower).muln(0.6)
+        poolLiquidity.mul(votingPower).div(totalVotingPower).muln(6).divn(10)
       ),
     liquidity
   )
 
-  const boost = effectiveLiquidity.sub(liquidity)
-  const boostPercent = boost.div(liquidity).muln(100).toNumber()
-
+  const boostPercent = effectiveLiquidity.muln(100).div(baseLiquidity).toNumber()
   return boostPercent
 }

@@ -150,7 +150,7 @@ export class StakeWrapper {
   /**
    * Calculate unclaimed rewards for a stake
    */
-  async getRewardInfo(): Promise<RewardOwed> {
+  async getRewardInfo(time: number): Promise<RewardOwed> {
     const { mint, incentive, liquidity, secondsPerLiquidityInsideInitialX32 } = await this.data()
     const incentiveWrapper = new IncentiveWrapper(this.sdk, incentive)
     const { totalRewardUnclaimed, totalSecondsClaimedX32, startTime, endTime, boostLocker } = await incentiveWrapper.data()
@@ -196,10 +196,6 @@ export class StakeWrapper {
     const tickUpperData = await cyclosCore.account.tickState.fetch(tickUpperState)
     const latestObservationData = await cyclosCore.account.observationState.fetch(latestObservation)
 
-    const time = await this.provider.connection.getBlockTime(
-      await this.provider.connection.getSlot()
-    )
-
     const { secondsPerLiquidityInsideX32 } = snapshotCumulativesInside({
       poolState: poolData,
       tickLower: tickLowerData,
@@ -226,6 +222,7 @@ export class StakeWrapper {
       const escrowWrapper = new VoteEscrow(tribecaSdk, boostLocker, governor, escrowKey, owner)
       const votingPower = await escrowWrapper.calculateVotingPower()
 
+      console.log('locked supply', lockedSupply.toString(), 'voting power', votingPower.toString(), 'total voting power', totalVotingPower.toString())
       return computeRewardAmountBoosted({
         totalRewardUnclaimed,
         totalSecondsClaimedX32,

@@ -117,37 +117,48 @@ describe('cykura-staker', () => {
     stakeWrapper = _stakeWrapper
 
     await expectTX(createDepositAndStakeTx, "create deposit and stake").to.be.fulfilled
-
-    const incentiveData = await incentiveWrapper.reload()
   })
 
   it('perform a swap to earn liquidity mining reward', async () => {
     await swapExactInput(provider, ammAccounts.poolState)
+    await sleep(1000)
   })
 
   it('unstake and collect reward', async () => {
     // read accumulated reward
-    const rewardInfo = await stakeWrapper.getRewardInfo()
-    console.log('reward', rewardInfo.reward.toNumber(), 'seconds inside x32', rewardInfo.secondsInsideX32.toString())
+    const time = await provider.connection.getBlockTime(
+      await provider.connection.getSlot()
+    )
+    const rewardInfo = await stakeWrapper.getRewardInfo(time)
+    console.log(
+      'reward',
+      rewardInfo.reward.toNumber(),
+      'seconds inside x32',
+      rewardInfo.secondsInsideX32.toString(),
+      'boost percent',
+      rewardInfo.boostPercent
+    )
 
     // create a reward account and unstake
     const { reward: _rewardWrapper, tx: unstakeTx } = await stakeWrapper.unstakeToken(depositWrapper)
     rewardWrapper = _rewardWrapper
+    await unstakeTx.send()
 
     await expectTX(unstakeTx, "unstake LP NFT").to.be.fulfilled
+    // Should be slightly more than the client side calculation, as time taken for the TX to process
+    // is accounted.
     const { rewardsOwed } =  await rewardWrapper.data()
     console.log('reward owed', rewardsOwed.toString())
-    assert(rewardsOwed.eq(rewardInfo.reward))
 
     // transfer out reward from reward account to the user
     const u64Max = new BN(1).shln(63) // pass u64::MAX to completely transfer entire pending reward
     const claimRewardTx = await rewardWrapper.claimReward(u64Max, token0)
-    unstakeTx.combine(claimRewardTx)
+    await expectTX(claimRewardTx, "claim reward").to.be.fulfilled
 
-    await expectTX(unstakeTx, "unstake and collect reward").to.be.fulfilled
-
-    // call withdrawToken if you wish to remove the user from the farm
-    // If you wish to harvest the rewards and continue farming, call stakeToken() again.
+    // Notes-
+    // 1. Use `unstakeTx.combine(claimRewardTx)` to recieve rewards in your wallet in a single TX
+    // 2. call withdrawToken if you wish to remove the user from the farm
+    // 3. If you wish to harvest the rewards and continue farming, call stakeToken() again.
   })
 
   it('withdraw token and exit from farm', async () => {

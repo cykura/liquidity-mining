@@ -4,6 +4,7 @@ use crate::*;
 
 /// Represents a staking incentive.
 #[account]
+#[derive(Debug)]
 pub struct Incentive {
     /// The ATA bump.
     pub bump: u8,
@@ -60,6 +61,7 @@ pub struct Deposit {
 
 /// Represents a staked liquidity NFT.
 #[account]
+#[derive(Debug)]
 pub struct Stake {
     /// The ATA bump.
     pub bump: u8,

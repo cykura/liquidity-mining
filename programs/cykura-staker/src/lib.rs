@@ -9,7 +9,7 @@ mod state;
 pub use instructions::*;
 pub use state::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("LiquB13Cv6ZJsCYaPHY9Gxt1YN46gZx9nLAscgM7YR1");
 
 // Constructor constants, read from Etherscan
 /// The max duration of an incentive in seconds

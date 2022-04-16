@@ -1,5 +1,5 @@
 import * as chai from "chai"
-import { Program, web3, BN } from '@project-serum/anchor'
+import { web3, BN } from '@project-serum/anchor'
 import { PublicKey } from '@saberhq/solana-contrib'
 import { chaiSolana, expectTX } from '@saberhq/chai-solana'
 import { assert } from 'chai'
@@ -7,7 +7,7 @@ import { createMintsAndAirdrop } from "./utils/createMintsAndAirdrop"
 import { setupEscrowAndLockTokens } from "./utils/setupEscrowAndLockTokens"
 import { setupWorkspace } from "./utils/setupWorkspace"
 import { createCyclosPosition, swapExactInput } from "./utils/createCyclosPosition"
-import { computeRewardAmount, DepositWrapper, IncentiveWrapper, RewardWrapper } from "../src"
+import { DepositWrapper, IncentiveWrapper, RewardWrapper } from "../src"
 import { StakeWrapper } from "../src/wrappers/stake"
 import { sleep } from "@saberhq/token-utils"
 

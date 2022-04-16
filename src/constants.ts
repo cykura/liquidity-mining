@@ -12,7 +12,7 @@ export interface CykuraStakerPrograms {
 
 // See `Anchor.toml` for all addresses.
 export const CYKURA_STAKER_ADDRESSES = {
-  CykuraStaker: new web3.PublicKey('Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS')
+  CykuraStaker: new web3.PublicKey('LiquB13Cv6ZJsCYaPHY9Gxt1YN46gZx9nLAscgM7YR1')
 }
 
 /**

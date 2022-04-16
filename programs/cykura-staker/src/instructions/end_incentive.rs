@@ -12,14 +12,14 @@ pub struct EndIncentive<'info> {
     /// The incentive token account which will make the refund.
     #[account(
         mut,
-        address = get_associated_token_address(staker.key, &incentive.reward_token)
+        address = get_associated_token_address(stake_manager.key, &incentive.reward_token)
     )]
     pub vault: Account<'info, TokenAccount>,
 
     /// The root program account which acts as the deposit vault authority.
     /// CHECK: The address is verified using seeds and bump.
     #[account(seeds = [], bump)]
-    pub staker: UncheckedAccount<'info>,
+    pub stake_manager: UncheckedAccount<'info>,
 
     /// The token account of the refundee.
     #[account(mut, constraint = refundee_token_account.owner == incentive.refundee)]
@@ -45,7 +45,7 @@ impl<'info> EndIncentive<'info> {
                 token::Transfer {
                     from: self.vault.to_account_info(),
                     to: self.vault.to_account_info(),
-                    authority: self.staker.to_account_info(),
+                    authority: self.stake_manager.to_account_info(),
                 },
                 &[&seeds[..]],
             ),

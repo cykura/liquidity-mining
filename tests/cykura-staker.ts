@@ -142,9 +142,8 @@ describe('cykura-staker', () => {
     // create a reward account and unstake
     const { reward: _rewardWrapper, tx: unstakeTx } = await stakeWrapper.unstakeToken(depositWrapper)
     rewardWrapper = _rewardWrapper
-    await unstakeTx.send()
-
     await expectTX(unstakeTx, "unstake LP NFT").to.be.fulfilled
+
     // Should be slightly more than the client side calculation, as time taken for the TX to process
     // is accounted.
     const { rewardsOwed } =  await rewardWrapper.data()

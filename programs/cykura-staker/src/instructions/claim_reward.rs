@@ -19,14 +19,14 @@ pub struct ClaimReward<'info> {
     #[account(
         mut,
         // associated_token is bugged in anchor v0.22
-        address = get_associated_token_address(staker.key, &reward.reward_token)
+        address = get_associated_token_address(stake_manager.key, &reward.reward_token)
     )]
     pub vault: Account<'info, TokenAccount>,
 
     /// The root program account which acts as the vault authority.
     /// CHECK: The address is verified using seeds and bump.
     #[account(seeds = [], bump)]
-    pub staker: UncheckedAccount<'info>,
+    pub stake_manager: UncheckedAccount<'info>,
 
     /// The token account where the reward will be sent
     /// CHECK: The reward can be transferred to any token account set by the reward owner. The token program CPI
@@ -55,7 +55,7 @@ impl<'info> ClaimReward<'info> {
                 token::Transfer {
                     from: self.vault.to_account_info(),
                     to: self.to.to_account_info(),
-                    authority: self.staker.to_account_info(),
+                    authority: self.stake_manager.to_account_info(),
                 },
                 &[&seeds[..]],
             ),

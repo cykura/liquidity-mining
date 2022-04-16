@@ -19,14 +19,14 @@ pub struct WithdrawToken<'info> {
     /// The vault which holds the deposited token.
     #[account(
         mut,
-        address = get_associated_token_address(staker.key, &deposit.mint)
+        address = get_associated_token_address(stake_manager.key, &deposit.mint)
     )]
     pub deposit_vault: Account<'info, TokenAccount>,
 
     /// The root program account which acts as the deposit vault authority.
     /// CHECK: The address is verified using seeds and bump.
     #[account(seeds = [], bump)]
-    pub staker: UncheckedAccount<'info>,
+    pub stake_manager: UncheckedAccount<'info>,
 
     /// The current owner of the deposit.
     pub owner: Signer<'info>,
@@ -53,7 +53,7 @@ impl<'info> WithdrawToken<'info> {
                 token::Transfer {
                     from: self.deposit_vault.to_account_info(),
                     to: self.to.to_account_info(),
-                    authority: self.staker.to_account_info(),
+                    authority: self.stake_manager.to_account_info(),
                 },
                 &[&seeds[..]],
             ),

@@ -5,7 +5,7 @@ import type { PublicKey } from "@solana/web3.js";
 import type BN from "bn.js";
 import { IncentiveData } from "../programs";
 import { CykuraStakerSDK } from "../sdk";
-import { findStakerAddress } from "./pda";
+import { findStakeManagerAddress } from "./pda";
 
 export class IncentiveWrapper {
   private _incentive: IncentiveData | null = null;
@@ -33,13 +33,13 @@ export class IncentiveWrapper {
 
   async addReward(reward: BN, payerTokenAccount?: PublicKey) {
     const tx = new TransactionEnvelope(this.provider, [])
-    const [staker] = await findStakerAddress()
+    const [stakeManager] = await findStakeManagerAddress()
     const { rewardToken } = await this.data()
 
     const { address: vault, instruction: createVaultIx } = await getOrCreateATA({
       provider: this.provider,
       mint: rewardToken,
-      owner: staker,
+      owner: stakeManager,
     })
     if (createVaultIx) {
       tx.append(createVaultIx)
@@ -73,11 +73,11 @@ export class IncentiveWrapper {
    * default ATA does not exist.
    */
   async endIncentive(refundeeTokenAccount?: PublicKey): Promise<TransactionEnvelope> {
-    const [staker] = await findStakerAddress()
+    const [stakeManager] = await findStakeManagerAddress()
     const { rewardToken, refundee } = await this.data()
     const vault = await getATAAddress({
       mint: rewardToken,
-      owner: staker,
+      owner: stakeManager,
     })
 
     const tx = new TransactionEnvelope(
@@ -102,7 +102,7 @@ export class IncentiveWrapper {
       await this.sdk.programs.CykuraStaker.methods.endIncentive().accounts({
         incentive: this.incentiveKey,
         vault,
-        staker,
+        stakeManager,
         refundeeTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID
       }).instruction()

@@ -4,7 +4,7 @@ import { getATAAddress, getOrCreateATA, MAX_U64, TOKEN_PROGRAM_ID, u64 } from "@
 import type { PublicKey } from "@solana/web3.js";
 import { RewardData } from "../programs";
 import { CykuraStakerSDK } from "../sdk";
-import { findStakerAddress } from "./pda";
+import { findStakeManagerAddress } from "./pda";
 
 export class RewardWrapper {
   private _reward: RewardData | null = null;
@@ -42,10 +42,10 @@ export class RewardWrapper {
     if (!rewardToken) {
       ({ rewardToken } = await this.data())
     }
-    const [staker] = await findStakerAddress()
+    const [stakeManager] = await findStakeManagerAddress()
     const vault = await getATAAddress({
       mint: rewardToken,
-      owner: staker,
+      owner: stakeManager,
     })
 
     const tx = new TransactionEnvelope(
@@ -64,12 +64,13 @@ export class RewardWrapper {
       }
     }
 
+    console.log('stake manager', stakeManager)
     tx.append(
       await this.program.methods.claimReward(rewardRequested).accounts({
         reward: this.rewardKey,
         owner: this.provider.walletKey,
         vault,
-        staker,
+        stakeManager,
         to,
         tokenProgram: TOKEN_PROGRAM_ID,
       }).instruction()

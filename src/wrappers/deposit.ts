@@ -4,7 +4,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import type { PublicKey } from "@solana/web3.js";
 import { DepositData } from "../programs";
 import { CykuraStakerSDK } from "../sdk";
-import { findStakerAddress } from "./pda";
+import { findStakeManagerAddress } from "./pda";
 
 export class DepositWrapper {
   private _deposit: DepositData | null = null;
@@ -33,9 +33,9 @@ export class DepositWrapper {
 
   // Returns a transaction to withdraw a deposited token
   async withdrawToken(): Promise<TransactionEnvelope> {
-    const [staker] = await findStakerAddress()
+    const [stakeManager] = await findStakeManagerAddress()
     const { mint } = await this.data()
-    const depositVault = await getATAAddress({ mint, owner: staker })
+    const depositVault = await getATAAddress({ mint, owner: stakeManager })
 
     const { address: to, instruction: createToAccountIx } = await getOrCreateATA({
       provider: this.provider,
@@ -54,7 +54,7 @@ export class DepositWrapper {
       await this.program.methods.withdrawToken().accounts({
         deposit: this.depositKey,
         depositVault,
-        staker,
+        stakeManager,
         owner: this.provider.wallet.publicKey,
         to,
         tokenProgram: TOKEN_PROGRAM_ID,

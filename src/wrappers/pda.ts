@@ -3,7 +3,7 @@ import { PublicKey } from "@solana/web3.js";
 
 import { CYKURA_STAKER_ADDRESSES } from "../constants";
 
-export const findStakerAddress = async (): Promise<[PublicKey, number]> => {
+export const findStakeManagerAddress = async (): Promise<[PublicKey, number]> => {
   return PublicKey.findProgramAddress(
     [],
     CYKURA_STAKER_ADDRESSES.CykuraStaker

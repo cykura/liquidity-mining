@@ -104,7 +104,7 @@ pub mod cykura_staker {
         );
 
         ctx.accounts
-            .end_incentive(*ctx.bumps.get("staker").unwrap())
+            .end_incentive(*ctx.bumps.get("stake_manager").unwrap())
     }
 
     /// Creates a new [Deposit] by staking a position NFT.
@@ -123,7 +123,7 @@ pub mod cykura_staker {
         // TODO verify if bumps.get() works for UncheckedAccount.
         // If not, use Pubkey::find_program_address() for bump
         ctx.accounts
-            .withdraw_token(*ctx.bumps.get("staker").unwrap())
+            .withdraw_token(*ctx.bumps.get("stake_manager").unwrap())
     }
 
     /// Stakes a Cykura LP token
@@ -176,7 +176,7 @@ pub mod cykura_staker {
     /// Transfers `amount_requested` of accrued `reward_token` rewards from the contract to the recipient `to`
     pub fn claim_reward(ctx: Context<ClaimReward>, amount_requested: u64) -> Result<()> {
         ctx.accounts
-            .claim_reward(amount_requested, *ctx.bumps.get("staker").unwrap())
+            .claim_reward(amount_requested, *ctx.bumps.get("stake_manager").unwrap())
     }
 }
 

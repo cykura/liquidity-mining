@@ -6,13 +6,13 @@ import {
   SolanaAugmentedProvider,
   TransactionEnvelope,
 } from "@saberhq/solana-contrib";
-import { getATAAddress, getOrCreateATA, getTokenAccount, TOKEN_PROGRAM_ID } from "@saberhq/token-utils";
+import { getOrCreateATA, getTokenAccount, TOKEN_PROGRAM_ID } from "@saberhq/token-utils";
 import { PublicKey, Signer } from "@solana/web3.js";
 import { SystemProgram } from "@solana/web3.js";
 import { CyclosCore, FACTORY_ADDRESS, IDL as CYCLOS_CORE_IDL, OBSERVATION_SEED, POOL_SEED, POSITION_SEED, TICK_SEED, u16ToSeed, u32ToSeed } from "@cykura/sdk";
 
 import { CykuraStakerPrograms, CYKURA_STAKER_ADDRESSES, CYKURA_STAKER_IDLS } from "./constants";
-import { DepositWrapper, findDepositAddress, findIncentiveAddress, findRewardAddress, findStakeAddress, findStakerAddress, IncentiveWrapper, RewardWrapper } from "./wrappers";
+import { DepositWrapper, findDepositAddress, findIncentiveAddress, findRewardAddress, findStakeAddress, findStakeManagerAddress, IncentiveWrapper, RewardWrapper } from "./wrappers";
 import { PendingDeposit, PendingIncentive, PendingReward, PendingStake } from "./wrappers/types";
 import { StakeWrapper } from "./wrappers/stake";
 
@@ -148,12 +148,12 @@ export class CykuraStakerSDK {
     const tx = new TransactionEnvelope(this.provider, [])
     const { mint } = await getTokenAccount(this.provider, depositorTokenAccount)
     const [deposit] = await findDepositAddress(mint)
-    const [staker] = await findStakerAddress()
+    const [stakeManager] = await findStakeManagerAddress()
 
     const { address: depositVault, instruction: createVaultIx } = await getOrCreateATA({
       provider: this.provider,
       mint,
-      owner: staker,
+      owner: stakeManager,
     })
     if (createVaultIx) {
       tx.append(createVaultIx)

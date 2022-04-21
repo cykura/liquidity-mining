@@ -31,3 +31,7 @@ program = "./external-programs/locked_voter.so"
 [[test.genesis]]
 address = "cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8"
 program = "./external-programs/cyclos_core.so"
+
+[[test.genesis]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+program = "./external-programs/mpl_token_metadata.so"

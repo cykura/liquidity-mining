@@ -1,6 +1,6 @@
-import { BN } from "@project-serum/anchor"
-import { assert } from "chai"
-import { computeRewardAmountBoosted } from "./rewardMath"
+import { BN } from '@project-serum/anchor';
+import { assert } from 'chai';
+import { computeRewardAmountBoosted } from './rewardMath';
 
 describe('rewardMath', () => {
     it('computeRewardAmountBoosted', () => {
@@ -16,7 +16,7 @@ describe('rewardMath', () => {
             totalPoolLiquidity: new BN(100505830),
             votingPower: new BN(634),
             totalVotingPower: new BN(100000),
-        })
-        assert(amt.reward.eqn(50790))
-    })
-})
+        });
+        assert(amt.reward.eqn(50790));
+    });
+});

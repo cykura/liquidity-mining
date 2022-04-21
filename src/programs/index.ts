@@ -1,1 +1,1 @@
-export * from "./cykuraStaker";
+export * from './cykuraStaker';

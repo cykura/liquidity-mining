@@ -30,8 +30,8 @@ import {
   CykuraStakerPrograms,
   CYKURA_STAKER_ADDRESSES,
   CYKURA_STAKER_IDLS,
-  TOKENS_MAINNET,
-  TOKENS_TEST,
+  BONDER_MAINNET,
+  BONDER_TEST,
 } from './constants';
 import {
   DepositWrapper,
@@ -381,10 +381,9 @@ export class CykuraStakerSDK {
     const tx = new TransactionEnvelope(this.provider, [])
 
     const { cys, bCys } = mainnet
-      ? TOKENS_MAINNET
-      : TOKENS_TEST
+      ? BONDER_MAINNET
+      : BONDER_TEST
 
-    console.log('bonded cys mint', bCys.toString())
     if (!from) {
       from = await getATAAddress({ mint: cys, owner: this.provider.walletKey })
     }
@@ -394,10 +393,8 @@ export class CykuraStakerSDK {
         mint: bCys,
       })
       to = _to
-      console.log('to address', to.toString())
 
       if (createToIx) {
-        console.log('adding ATA creation IX')
         tx.append(createToIx)
       }
     }
@@ -414,6 +411,62 @@ export class CykuraStakerSDK {
 
     tx.append(await this.programs.BondedCys.methods
       .bond(amount)
+      .accounts({
+        bondManager,
+        from,
+        escrow,
+        to,
+        bondedCysMint: bCys,
+        signer: this.provider.walletKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .instruction())
+
+    return tx
+  }
+
+  /**
+   * Returns a TX to unbond CYS. ATAs creation instructions are prepended if accounts do not exist.
+   *
+   * @param amount The amount to unbond
+   * @param from The token account paying out bonded CYS
+   * @param to The token account receiving unbonded CYS
+   */
+   async unbond(
+    amount: BN,
+    mainnet: boolean = false,
+    from?: PublicKey,
+    to?: PublicKey,
+  ) {
+    const tx = new TransactionEnvelope(this.provider, [])
+
+    const { cys, bCys } = mainnet
+      ? BONDER_MAINNET
+      : BONDER_TEST
+
+    if (!from) {
+      from = await getATAAddress({ mint: bCys, owner: this.provider.walletKey })
+    }
+    if (!to) {
+      const { address: _to, instruction: createToIx } = await getOrCreateATA({
+        provider: this.provider,
+        mint: cys,
+      })
+      to = _to
+
+      if (createToIx) {
+        tx.append(createToIx)
+      }
+    }
+
+    const [bondManager] = await findBondManager()
+    const escrow = await getATAAddress({
+      mint: cys,
+      owner: bondManager,
+    })
+
+    tx.append(await this.programs.BondedCys.methods
+      .unbond(amount)
       .accounts({
         bondManager,
         from,

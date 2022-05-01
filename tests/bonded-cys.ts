@@ -70,4 +70,20 @@ describe('bonded cys', () => {
     assert(bondedCysWalletData.amount.eq(bondAmount))
   })
 
+  it('unbond CYS', async () => {
+    const unbondTx = await sdk.unbond(bondAmount)
+    await expectTX(unbondTx, "unbond CYS").to.be.fulfilled
+
+    const escrowData = await getTokenAccount(provider, escrow)
+    assert(escrowData.amount.eqn(0))
+
+    const bondedCysMintData = await getMintInfo(provider, bCys)
+    assert(bondedCysMintData.supply.eqn(0))
+
+    const cysWalletData = await getTokenAccount(provider, cysWallet)
+    console.log('cys wallet data', cysWalletData.amount.toString())
+
+    const expectedAmt = new BN("100000000")
+    assert(cysWalletData.amount.eq(expectedAmt), "cys amt not equal")
+  })
 })

@@ -57,12 +57,14 @@ export const TRIBECA_PARAMS = {
   maxStakeVoteMultiplier: 10,
 }
 
-export const TOKENS_MAINNET = {
+export const BONDER_MAINNET = {
   cys: new web3.PublicKey("BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg"),
-  bCys: new web3.PublicKey("bcysAECyg9df5YY4wEUT2T4aFz4Rn4ySfpfsmWVp1cX")
+  bCys: new web3.PublicKey("bcysAECyg9df5YY4wEUT2T4aFz4Rn4ySfpfsmWVp1cX"),
+  unlockTime: 0, // immediate unlock
 }
 
-export const TOKENS_TEST = {
+export const BONDER_TEST = {
   cys: new web3.PublicKey("4UyKKoK5s2cur87ARnu1gZKcWnUoYjAZPv2HAXgzzfuk"),
-  bCys: new web3.PublicKey("6Qj6NpbXLyVCwA4Qsjr7JdwvwkLhokouB3bSb3ZhhtHE")
+  bCys: new web3.PublicKey("6Qj6NpbXLyVCwA4Qsjr7JdwvwkLhokouB3bSb3ZhhtHE"),
+  unlockTime: 1715279400, // Thu May 09 2024 18:30:00 GMT+0000
 }

@@ -71,7 +71,6 @@ export class RewardWrapper {
             }
         }
 
-        console.log('stake manager', stakeManager);
         tx.append(
             await this.program.methods
                 .claimReward(rewardRequested)

@@ -2,6 +2,7 @@
 seeds = false
 [programs.localnet]
 cykura_staker = "LiquB13Cv6ZJsCYaPHY9Gxt1YN46gZx9nLAscgM7YR1"
+bonded_cys = "bondk8vdEkwpERDBARjhVwqzNHrvxX6QPBLc2q13ABH"
 
 [registry]
 url = "https://anchor.projectserum.com"

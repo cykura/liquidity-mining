@@ -68,8 +68,8 @@ describe('cykura-staker', () => {
     const slot = await provider.connection.getSlot()
     const blockTime = await provider.connection.getBlockTime(slot)
 
-    startTime = new BN(blockTime + 2)
-    endTime = new BN(blockTime + 10)
+    startTime = new BN(blockTime! + 2)
+    endTime = new BN(blockTime! + 10)
 
     const { wrapper: _incentiveWrapper, tx: createIncentiveTx } = await cykuraStakerSdk.createIncentiveBoosted({
       rewardToken: token0,
@@ -129,7 +129,7 @@ describe('cykura-staker', () => {
     const time = await provider.connection.getBlockTime(
       await provider.connection.getSlot()
     )
-    const rewardInfo = await stakeWrapper.getRewardInfo(time)
+    const rewardInfo = await stakeWrapper.getRewardInfo(time!)
     console.log(
       'reward',
       rewardInfo.reward.toNumber(),

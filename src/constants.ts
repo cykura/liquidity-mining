@@ -1,6 +1,6 @@
 import { buildCoderMap } from '@saberhq/anchor-contrib';
 import { web3 } from '@project-serum/anchor';
-import { CykuraStakerJSON } from './idls/cykura_staker';
+import { IDL as CykuraStakerJSON } from './idls/cykura_staker';
 import { CykuraStakerProgram, CykuraStakerTypes } from './programs';
 
 /**

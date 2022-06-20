@@ -34,8 +34,8 @@ const cykuraStakerSdk = CykuraStakerSDK.load({
 const provider = cykuraStakerSdk.provider;
 const owner = provider.wallet.publicKey;
 
-const token0 = new PublicKey('GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm'); // USDC local mint
-const token1 = new PublicKey('7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t'); // USDT local mint
+const token0 = new PublicKey('7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t'); // USDT local mint
+const token1 = new PublicKey('GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm'); // USDC local mint
 
 (async function () {
     // Setup and create Escrow and locker
@@ -102,7 +102,7 @@ const token1 = new PublicKey('7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t'); //
     );
 
     // create escrow and lock tokens
-    const lockTokensTx = await lockerWrapper.lockTokens({
+    const lockTokensTx = await lockerWrapper.lockTokensV1({
         amount: new BN(10_000),
         duration: new BN(DEFAULT_LOCKER_PARAMS.maxStakeDuration),
     });
@@ -139,8 +139,8 @@ const token1 = new PublicKey('7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t'); //
     if (!blockTime) {
         return;
     }
-    const startTime = new BN(blockTime);
-    const endTime = new BN(blockTime + 864000000);
+    const startTime = new BN(blockTime + 100);
+    const endTime = new BN(blockTime + 86400);
 
     const { wrapper: _incentiveWrapper, tx: createIncentiveTx } =
         await cykuraStakerSdk.createIncentiveBoosted({

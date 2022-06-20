@@ -39,9 +39,11 @@ const MAX_INCENTIVE_START_LEAD_TIME = 2592000;
 // DAO parameters for Cykura
 // https://tribeca.so/gov/HnV7iBwe3pfeUdmBwmNir8jDWUunsb7CuGSHnnBdMJBC
 export const TRIBECA_PARAMS = {
-    governor: new web3.PublicKey("HnV7iBwe3pfeUdmBwmNir8jDWUunsb7CuGSHnnBdMJBC"),
-    locker: new web3.PublicKey("6vGZ4L4QpDDEU8uet6TGJCJZSLcWg2yjRKFkNFumdZUn"),
-    token: new web3.PublicKey("BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg"),
+    governor: new web3.PublicKey(
+        'HnV7iBwe3pfeUdmBwmNir8jDWUunsb7CuGSHnnBdMJBC'
+    ),
+    locker: new web3.PublicKey('6vGZ4L4QpDDEU8uet6TGJCJZSLcWg2yjRKFkNFumdZUn'),
+    token: new web3.PublicKey('BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg'),
     quorum: 2000000000000,
     minVotes: 100000000000,
     timelockDelay: 1,
@@ -49,4 +51,4 @@ export const TRIBECA_PARAMS = {
     minStakeDuration: 86400, // 1 day
     maxStakeDuration: 157680000, // 5 years
     maxStakeVoteMultiplier: 10,
-}
+};

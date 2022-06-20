@@ -1,15 +1,15 @@
 import type { AnchorTypes } from '@saberhq/anchor-contrib';
-import type { CykuraStakerIDL } from '../idls/cykura_staker';
+import type { CykuraStaker } from '../idls/cykura_staker';
 
 export * from '../idls/cykura_staker';
 
-export type IncentiveData = Accounts['Incentive'];
-export type DepositData = Accounts['Deposit'];
-export type StakeData = Accounts['Stake'];
-export type RewardData = Accounts['Reward'];
+export type IncentiveData = Accounts['incentive'];
+export type DepositData = Accounts['deposit'];
+export type StakeData = Accounts['stake'];
+export type RewardData = Accounts['reward'];
 
 export type CykuraStakerTypes = AnchorTypes<
-    CykuraStakerIDL,
+    CykuraStaker,
     {
         incentive: IncentiveData;
         deposit: DepositData;

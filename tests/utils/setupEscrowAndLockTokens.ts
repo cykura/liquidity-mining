@@ -3,6 +3,7 @@ import { web3, BN } from "@project-serum/anchor"
 import { expectTX } from "@saberhq/chai-solana"
 import { SolanaAugmentedProvider, SolanaProvider } from "@saberhq/solana-contrib"
 import { findGovernorAddress, findLockerAddress, findEscrowAddress, TribecaSDK, LockerWrapper, DEFAULT_LOCKER_PARAMS } from "@tribecahq/tribeca-sdk"
+import { TRIBECA_PARAMS } from "../../src/constants"
 
 /**
  * Sets up a Tribeca escrow and returns necessary addresses
@@ -62,9 +63,9 @@ import { findGovernorAddress, findLockerAddress, findEscrowAddress, TribecaSDK, 
     )
 
     // create escrow and lock tokens
-    const lockTokensTx = await lockerWrapper.lockTokens({
-      amount: new BN(10_000),
-      duration: new BN(DEFAULT_LOCKER_PARAMS.maxStakeDuration),
+    const lockTokensTx = await lockerWrapper.lockTokensV1({
+      amount: new BN(1_000_000),
+      duration: new BN(TRIBECA_PARAMS.maxStakeDuration),
     })
     await expectTX(lockTokensTx).to.be.fulfilled
 

@@ -17,16 +17,17 @@
     "dependencies": {
         "@cykura/sdk": "^0.1.26",
         "@cykura/sdk-core": "^0.1.7",
-        "@gokiprotocol/client": "^0.6.1",
+        "@gokiprotocol/client": "0.10.4",
         "@project-serum/anchor": "^0.23.0",
         "@saberhq/anchor-contrib": "1.13.29",
         "@saberhq/chai-solana": "1.13.29",
         "@saberhq/solana-contrib": "1.13.29",
         "@saberhq/token-utils": "1.13.29",
         "@solana/spl-token": "^0.1.8",
-        "@tribecahq/tribeca-sdk": "^0.4.0",
+        "@tribecahq/tribeca-sdk": "0.5.7",
         "jsbi": "4.1.0",
-        "tiny-invariant": "^1.2.0"
+        "tiny-invariant": "^1.2.0",
+        "@solana/web3.js": "^1.42"
     },
     "devDependencies": {
         "@types/mocha": "^9.0.0",

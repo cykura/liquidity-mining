@@ -89,7 +89,7 @@ describe('cykura-staker', () => {
     assert(incentiveData.refundee.equals(owner))
     assert(incentiveData.startTime.eq(startTime))
     assert(incentiveData.endTime.eq(endTime))
-    assert(incentiveData.boostLocker.equals(locker))
+    assert(incentiveData.boostLocker?.equals(locker))
     assert.equal(incentiveData.numberOfStakes, 0)
   })
 

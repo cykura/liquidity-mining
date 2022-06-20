@@ -1,5 +1,5 @@
 import { TransactionEnvelope } from '@saberhq/solana-contrib';
-import { getATAAddress, getOrCreateATA } from '@saberhq/token-utils';
+import { getATAAddressSync, getOrCreateATA } from '@saberhq/token-utils';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import type { PublicKey } from '@solana/web3.js';
 import type BN from 'bn.js';
@@ -50,7 +50,7 @@ export class IncentiveWrapper {
         }
 
         if (!payerTokenAccount) {
-            payerTokenAccount = await getATAAddress({
+            payerTokenAccount = await getATAAddressSync({
                 mint: rewardToken,
                 owner: this.provider.wallet.publicKey,
             });
@@ -84,7 +84,7 @@ export class IncentiveWrapper {
     ): Promise<TransactionEnvelope> {
         const [stakeManager] = await findStakeManagerAddress();
         const { rewardToken, refundee } = await this.data();
-        const vault = await getATAAddress({
+        const vault = await getATAAddressSync({
             mint: rewardToken,
             owner: stakeManager,
         });

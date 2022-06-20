@@ -1,7 +1,7 @@
 import { BN } from '@project-serum/anchor';
 import { TransactionEnvelope } from '@saberhq/solana-contrib';
 import {
-    getATAAddress,
+    getATAAddressSync,
     getOrCreateATA,
     MAX_U64,
     TOKEN_PROGRAM_ID,
@@ -52,7 +52,7 @@ export class RewardWrapper {
             ({ rewardToken } = await this.data());
         }
         const [stakeManager] = await findStakeManagerAddress();
-        const vault = await getATAAddress({
+        const vault = await getATAAddressSync({
             mint: rewardToken,
             owner: stakeManager,
         });

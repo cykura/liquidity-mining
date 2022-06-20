@@ -1,5 +1,5 @@
 import { TransactionEnvelope } from '@saberhq/solana-contrib';
-import { getATAAddress, getOrCreateATA } from '@saberhq/token-utils';
+import { getATAAddressSync, getOrCreateATA } from '@saberhq/token-utils';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import type { PublicKey } from '@solana/web3.js';
 import { DepositData } from '../programs';
@@ -37,7 +37,10 @@ export class DepositWrapper {
     async withdrawToken(): Promise<TransactionEnvelope> {
         const [stakeManager] = await findStakeManagerAddress();
         const { mint } = await this.data();
-        const depositVault = await getATAAddress({ mint, owner: stakeManager });
+        const depositVault = await getATAAddressSync({
+            mint,
+            owner: stakeManager,
+        });
 
         const { address: to, instruction: createToAccountIx } =
             await getOrCreateATA({

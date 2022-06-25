@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor';
 import type { BN } from '@project-serum/anchor';
-import { newProgramMap } from '@saberhq/anchor-contrib';
-import type { AugmentedProvider, Provider } from '@saberhq/solana-contrib';
+import { newProgramMap, makeAnchorProvider } from '@saberhq/anchor-contrib';
+import type { AugmentedProvider } from '@saberhq/solana-contrib';
 import {
     SolanaAugmentedProvider,
     TransactionEnvelope,
@@ -249,7 +249,7 @@ export class CykuraStakerSDK {
         const cyclosCore = new anchor.Program<CyclosCore>(
             CYCLOS_CORE_IDL,
             FACTORY_ADDRESS,
-            anchor.Provider.env()
+            makeAnchorProvider(this.provider) ?? anchor.Provider.env()
         );
         const { poolId, tickLower, tickUpper } =
             await cyclosCore.account.tokenizedPositionState.fetch(

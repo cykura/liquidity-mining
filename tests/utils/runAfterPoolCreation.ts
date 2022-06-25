@@ -34,101 +34,110 @@ const cykuraStakerSdk = CykuraStakerSDK.load({
 const provider = cykuraStakerSdk.provider;
 const owner = provider.wallet.publicKey;
 
-const token0 = new PublicKey('7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t'); // USDT local mint
+// USDT USDC 20
+// const token0 = new PublicKey('7HvgZSj1VqsGADkpb8jLXCVqyzniDHP5HzQCymHnrn1t'); // USDT local mint
+// const token1 = new PublicKey('GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm'); // USDC local mint
+// CYS USDSC 80
+const token0 = new PublicKey('cxWg5RTK5AiSbBZh7NRg5btsbSrc8ETLXGf7tk3MUez'); // CYS local mint
 const token1 = new PublicKey('GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm'); // USDC local mint
 
 (async function () {
     // Setup and create Escrow and locker
 
     // Do I need a new account here? Or can I just be the signer wallet itself?
-    const base = keypair;
-    console.log('base key', base.publicKey.toString());
+    // const base = keypair;
+    // console.log('base key', base.publicKey.toString());
 
-    // derive addresses
-    const [governor] = await findGovernorAddress(base.publicKey);
-    const [locker] = await findLockerAddress(base.publicKey);
-    const [escrow] = await findEscrowAddress(locker, provider.wallet.publicKey);
+    // // derive addresses
+    // const [governor] = await findGovernorAddress(base.publicKey);
+    // const [locker] = await findLockerAddress(base.publicKey);
+    // const [escrow] = await findEscrowAddress(locker, provider.wallet.publicKey);
 
-    // goki setup
-    const gokiSdk = GokiSDK.load({ provider });
-    const { smartWalletWrapper, tx: smartWalletTx } =
-        await gokiSdk.newSmartWallet({
-            numOwners: 1,
-            owners: [governor],
-            threshold: new BN(1),
-            base: base,
-        });
+    // // goki setup
+    // const gokiSdk = GokiSDK.load({ provider });
+    // const { smartWalletWrapper, tx: smartWalletTx } =
+    //     await gokiSdk.newSmartWallet({
+    //         numOwners: 1,
+    //         owners: [governor],
+    //         threshold: new BN(1),
+    //         base: base,
+    //     });
 
     let t = new web3.Transaction();
-    await pro.send(t.add(...smartWalletTx.instructions), smartWalletTx.signers);
-    console.log('FIRST WORKS', smartWalletWrapper.key.toString());
+    // await pro.send(t.add(...smartWalletTx.instructions), smartWalletTx.signers);
+    // console.log('FIRST WORKS', smartWalletWrapper.key.toString());
 
-    // tribeca governor setup
-    const tribecaSdk = TribecaSDK.load({ provider });
+    // // tribeca governor setup
+    // const tribecaSdk = TribecaSDK.load({ provider });
 
-    // create governor
-    const { wrapper: governorWrapper, tx: createGovernorTx } =
-        await tribecaSdk.govern.createGovernor({
-            electorate: locker,
-            smartWallet: smartWalletWrapper.key,
-            baseKP: base,
-        });
+    // // create governor
+    // const { wrapper: governorWrapper, tx: createGovernorTx } =
+    //     await tribecaSdk.govern.createGovernor({
+    //         electorate: locker,
+    //         smartWallet: smartWalletWrapper.key,
+    //         baseKP: base,
+    //     });
 
-    t = new web3.Transaction();
-    await pro.send(
-        t.add(...createGovernorTx.instructions),
-        createGovernorTx.signers
-    );
-    console.log('SECOND WORKS', governor.toString());
+    // t = new web3.Transaction();
+    // await pro.send(
+    //     t.add(...createGovernorTx.instructions),
+    //     createGovernorTx.signers
+    // );
+    // console.log('SECOND WORKS', governor.toString());
 
-    // create locker
-    const { tx: createLockerTx } = await tribecaSdk.createLocker({
-        baseKP: base,
-        governor: governor,
-        govTokenMint: token0,
-    });
+    // // create locker
+    // const { tx: createLockerTx } = await tribecaSdk.createLocker({
+    //     baseKP: base,
+    //     governor: governor,
+    //     govTokenMint: token0,
+    // });
 
-    t = new web3.Transaction();
-    await pro.send(
-        t.add(...createLockerTx.instructions),
-        createLockerTx.signers
-    );
-    console.log('THIRD WORKS', locker.toString());
+    // t = new web3.Transaction();
+    // await pro.send(
+    //     t.add(...createLockerTx.instructions),
+    //     createLockerTx.signers
+    // );
+    // console.log('THIRD WORKS', locker.toString());
 
-    const lockerWrapper = await LockerWrapper.load(
-        tribecaSdk,
-        locker,
-        governor
-    );
+    // const lockerWrapper = await LockerWrapper.load(
+    //     tribecaSdk,
+    //     locker,
+    //     governor
+    // );
 
-    // create escrow and lock tokens
-    const lockTokensTx = await lockerWrapper.lockTokensV1({
-        amount: new BN(10_000),
-        duration: new BN(DEFAULT_LOCKER_PARAMS.maxStakeDuration),
-    });
+    // // create escrow and lock tokens
+    // const lockTokensTx = await lockerWrapper.lockTokensV1({
+    //     amount: new BN(10_000),
+    //     duration: new BN(DEFAULT_LOCKER_PARAMS.maxStakeDuration),
+    // });
 
-    t = new web3.Transaction();
-    await pro.send(t.add(...lockTokensTx.instructions), lockTokensTx.signers);
-    // console.log('FOURTH WORKS');
+    // t = new web3.Transaction();
+    // await pro.send(t.add(...lockTokensTx.instructions), lockTokensTx.signers);
+    // // console.log('FOURTH WORKS');
 
-    console.log(
-        'base',
-        base.publicKey.toString(),
-        'smartWalletWrapper',
-        smartWalletWrapper.key.toString(),
-        'governor',
-        governor.toString(),
-        'locker',
-        locker.toString(),
-        'escrow',
-        escrow.toString(),
-        '\n'
-    );
+    // console.log(
+    //     'base',
+    //     base.publicKey.toString(),
+    //     'smartWalletWrapper',
+    //     smartWalletWrapper.key.toString(),
+    //     'governor',
+    //     governor.toString(),
+    //     'locker',
+    //     locker.toString(),
+    //     'escrow',
+    //     escrow.toString(),
+    //     '\n'
+    // );
 
     // Create a USDC USDT 0.002% pool from the UI
 
     const [poolState] = await PublicKey.findProgramAddress(
-        [POOL_SEED, token0.toBuffer(), token1.toBuffer(), u32ToSeed(FeeAmount.SUPER_STABLE)],
+        [
+            POOL_SEED,
+            token0.toBuffer(),
+            token1.toBuffer(),
+            u32ToSeed(FeeAmount.MEDIUM),
+        ],
         new PublicKey('cysPXAjehMpVKUapzbMCCnpFxUFFryEWEaLgnb9NrR8')
     );
 
@@ -148,7 +157,10 @@ const token1 = new PublicKey('GyH7fsFCvD1Wt8DbUGEk6Hzt68SVqwRKDHSvyBS16ZHm'); //
             pool: poolState,
             startTime,
             endTime,
-            locker,
+            // locker, //3ubxd21LdccFrUSr57U5ELEg68GWccDWSqZZffSdkXcM
+            locker: new PublicKey(
+                '3ubxd21LdccFrUSr57U5ELEg68GWccDWSqZZffSdkXcM'
+            ),
             refundee: owner,
         });
     const incentiveWrapper = _incentiveWrapper;
